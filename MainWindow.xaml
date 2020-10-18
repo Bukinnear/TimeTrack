@@ -1,0 +1,126 @@
+﻿<Window x:Class="TimeTrack.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TimeTrack"
+        mc:Ignorable="d"
+        Title="Time Track" Height="450" Width="780" Icon="time2.png">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="2.5*" />
+            <ColumnDefinition Width="1*" MinWidth="180" MaxWidth="150"/>
+        </Grid.ColumnDefinitions>
+
+        <DataGrid 
+            Name="DgTimeRecords" ItemsSource="{Binding TimeRecords}" AutoGenerateColumns="False" 
+            CanUserAddRows="False" CanUserReorderColumns="False" CanUserSortColumns="False"
+            CellEditEnding="DgTimeRecords_CellEditEnding"
+            Grid.Column="1" Margin="12,12,12,12" HorizontalAlignment="Stretch"
+            BorderBrush="LightCoral" BorderThickness="1"
+            HorizontalGridLinesBrush="White" VerticalGridLinesBrush="White" AlternatingRowBackground="GhostWhite">
+            <DataGrid.Columns>                
+                <DataGridCheckBoxColumn Header="" Width="30" Binding="{Binding Recorded}"/>
+                <DataGridTextColumn Header="Start" MinWidth="60" Binding="{Binding StartTime}"/>
+                <DataGridTextColumn Header="End" MinWidth="60" Binding="{Binding EndTime}"/>
+                <DataGridTextColumn Header="Case" MinWidth="80" Binding="{Binding CaseNumber}"/>
+                <DataGridTextColumn Header="Notes" MinWidth="160" Binding="{Binding Notes}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Column="2">
+            
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Margin="0,12,12,12" Grid.Row="0" ShowGridLines="False">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" FontWeight="Bold">Case Number</TextBlock>
+                <TextBlock Grid.Row="4" FontWeight="Bold">Start Time:</TextBlock>
+                <TextBlock Grid.Row="8" FontWeight="Bold">Finish Time:</TextBlock>
+                <TextBlock Grid.Row="12" FontWeight="Bold">Notes</TextBlock>
+
+                <TextBox Name="FldCaseNumber" Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="0"/>
+                <TextBox Name="FldStartTime" Grid.Row="6" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="1" />
+                <TextBox Name="FldEndTime" Grid.Row="10" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="2"/>
+                <TextBox Name="FldNotes" Grid.Row="14" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="3"/>
+            </Grid>
+
+            <Grid Margin="0,0,12,12" Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="4"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Grid.Row="0" TabIndex="4"
+                        Height="30" MaxWidth="100" HorizontalAlignment="Stretch" 
+                        BorderBrush="Black" BorderThickness="1"
+                        Click="BtnSubmit" ClickMode="Release">
+                    Submit
+                </Button>
+
+                <Button Grid.Column="2" Grid.Row="0" Height="30" Width="auto" HorizontalAlignment="Stretch" 
+                    BorderBrush="Black" BorderThickness="1"
+                    Click="BtnExport" ClickMode="Release">
+                    Export
+                </Button>
+
+                <Button Grid.Column="0" Grid.Row="2" Height="30" Width="auto" HorizontalAlignment="Stretch" 
+                    BorderBrush="Black" BorderThickness="1"
+                    Click="BtnInsert" ClickMode="Release">
+                    Insert Record
+                </Button>
+
+                <Button Grid.Column="0" Grid.Row="4" Height="30" Width="auto" HorizontalAlignment="Stretch" 
+                    BorderBrush="Black" BorderThickness="1"
+                    Click="BtnMoveUp" ClickMode="Release">
+                    ⬆
+                </Button>
+
+                <Button Grid.Column="2" Grid.Row="4" Height="30" Width="auto" HorizontalAlignment="Stretch" 
+                    BorderBrush="Black" BorderThickness="1"
+                    Click="BtnMoveDown" ClickMode="Release">
+                    ⬇
+                </Button>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
