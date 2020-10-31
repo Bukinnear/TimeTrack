@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,6 +23,7 @@ using System.Linq.Expressions;
 
 using CsvHelper;
 using CsvHelper.Configuration;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace TimeTrack
 {
@@ -32,31 +34,40 @@ namespace TimeTrack
         public MainWindow()
         {
             InitializeComponent();
+            //this.DataContext = this;
             
-            //ImportFromCSV("DEBUG.csv");
-            ImportFromCSV(CSVName());
+            ImportFromCSV("DEBUG.csv");
+            //ImportFromCSV(CSVName());
 
             DgTimeRecords.ItemsSource = time_records;
             FldStartTime.Focus();
         }
 
         private void BtnSubmit(object sender, RoutedEventArgs e)
-        {            
-            time_records.Add(new TimeEntry(FldStartTime.Text, FldEndTime.Text, FldCaseNumber.Text, FldNotes.Text));
-            ClearFields();
-            DgTimeRecords.SelectedIndex = time_records.Count - 1;
-            DgTimeRecords.Focus();
-            ExportToCSV(CSVName());
+        {
+            DateTime? start_time = StringToTime.StringToDateTime(FldStartTime.Text);
+            DateTime? end_time = StringToTime.StringToDateTime(FldEndTime.Text);
+
+            if (start_time != null && end_time != null)
+            {
+                time_records.Add(new TimeEntry((DateTime)start_time, (DateTime)end_time, FldCaseNumber.Text, FldNotes.Text));
+                ClearAndSetFields();
+                DgTimeRecords.SelectedIndex = time_records.Count - 1;
+                DgTimeRecords.Focus();
+                ExportToCSV(CSVName());
+            }
         }
 
         private void BtnInsert(object sender, RoutedEventArgs e)
         {
+            
             int insert_index = DgTimeRecords.SelectedIndex >= 0 ? DgTimeRecords.SelectedIndex + 1 : time_records.Count;
             
             time_records.Insert(insert_index, new TimeEntry());
             
             DgTimeRecords.SelectedIndex = insert_index;
             DgTimeRecords.Focus();
+             
         }
 
         private void BtnExport(object sender, RoutedEventArgs e)
@@ -87,7 +98,7 @@ namespace TimeTrack
             DgTimeRecords.Focus();
         }
 
-        private void ClearFields()
+        private void ClearAndSetFields()
         {
             FldStartTime.Text = FldEndTime.Text;
 
@@ -96,6 +107,16 @@ namespace TimeTrack
             FldNotes.Clear();
 
             FldEndTime.Focus();
+        }
+
+        private void ClearFields()
+        {
+            FldStartTime.Clear();
+            FldEndTime.Clear();
+            FldCaseNumber.Clear();
+            FldNotes.Clear();
+
+            FldStartTime.Focus();
         }
 
         private string CSVName()
@@ -132,7 +153,7 @@ namespace TimeTrack
                     }
                 }
             }
-            catch (Exception) { }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
         private void DgTimeRecords_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
@@ -145,14 +166,22 @@ namespace TimeTrack
     {
         public TimeEntry()
         {
-            start_time = "";
-            end_time = "";
+            start_time = null;
+            end_time = null;
+            case_number = "";
+            notes = "";
+            ID = ID_index += 1;
+        }
+        public TimeEntry(DateTime in_start, DateTime in_end)
+        {
+            start_time = in_start;
+            end_time = in_end;
             case_number = "";
             notes = "";
             ID = ID_index += 1;
         }
 
-        public TimeEntry(string in_start, string in_end, string in_case, string in_notes)
+        public TimeEntry(DateTime in_start, DateTime in_end, string in_case, string in_notes)
         {
             start_time = in_start;
             end_time = in_end;
@@ -164,8 +193,8 @@ namespace TimeTrack
         private static int ID_index;
 
         private int id;
-        private string start_time;
-        private string end_time;
+        private DateTime? start_time;
+        private DateTime? end_time;
         private string case_number;
         private string notes;
         private bool recorded;
@@ -173,56 +202,60 @@ namespace TimeTrack
         public int ID
         {
             get { return id; }
-            set
-            {
-                id = value;
-                OnPropertyChanged();                
-            }
+            set { id = value; OnPropertyChanged(); }
         }
-        public string StartTime 
+        /* as strings
+        public string StartTimeAsString
+        {
+            get
+            {
+                if (start_time != null)
+                    return start_time.Value.Minute.ToString() + start_time.Value.Second.ToString();
+                else 
+                    return "";
+            }
+            set { start_time = SetTimeFromString(value); OnPropertyChanged(); }
+        }
+        public string EndTimeAsString
+        {
+            get
+            {
+                if (end_time != null)
+                    return end_time.Value.Minute.ToString() + end_time.Value.Second.ToString();
+                else
+                    return "";
+            }
+            set { end_time = SetTimeFromString(value); OnPropertyChanged(); }
+        }*/
+        public DateTime? StartTime
         {
             get { return start_time; }
-            set 
-            { 
-                start_time = value;
-                OnPropertyChanged();
-            }
+            set { start_time = value; OnPropertyChanged(); }
         }
-        public string EndTime 
+        public DateTime? EndTime
         {
             get { return end_time; }
-            set
-            {
-                end_time = value;
-                OnPropertyChanged();
-            }
+            set { end_time = value; OnPropertyChanged(); }
         }
-        public string CaseNumber 
+        public string CaseNumber
         {
             get { return case_number; }
-            set
-            {
-                case_number = value;
-                OnPropertyChanged();
-            }
+            set { case_number = value; OnPropertyChanged(); }
         }
         public string Notes 
         {
             get { return notes; }
-            set
-            {
-                notes = value;
-                OnPropertyChanged();
-            }
+            set { notes = value; OnPropertyChanged(); }
         }
         public bool Recorded
         {
             get { return recorded; }
-            set
-            {
-                recorded = value;
-                OnPropertyChanged();
-            }
+            set { recorded = value; OnPropertyChanged(); }
+        }
+
+        private DateTime SetTimeFromString(string in_string)
+        {
+            return DateTime.Now;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -233,18 +266,183 @@ namespace TimeTrack
         }
     }
 
-    public class StringToTime : IValueConverter
+    public class TimeConvert : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            
-            return value;
-            
+            if (value == null)
+                return null;
+            else
+                return ((DateTime)value).ToShortTimeString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
+            return StringToTime.StringToDateTime((string)value);
+        }
+    }
+
+    public static class StringToTime
+    {
+        static DateTime today = DateTime.Today;
+        static DateTime work_hours_start = DateTime.ParseExact("07:00AM", "hh:mmtt", CultureInfo.InvariantCulture);
+        static DateTime work_hours_end = DateTime.ParseExact("07:00PM", "hh:mmtt", CultureInfo.InvariantCulture);
+
+        public static bool IsValidTimeFormat(string value)
+        {
+            /* Regex Explantion:
+             * ^                : starting at the beginning of the string
+             * \d{1,2}          : between 1, and 2 digit characters
+             * [;:]?            : either ; or : - optional
+             * ()               : encapsulated logic. The same as you are used to.
+             * (\d{2})?         : exactly 2 digit characters - option
+             * (\s?)+           : any number of whitespaces - optional
+             * (...)?           : everything contained in the brackets is optional
+             * (?i: ...         : contained commands will be case-insensitive
+             * ...[AP]M)?      : either A, or P characters, followed by M. All optional
+             * $                : the end of the string
+             */
+            string valid_time_format = @"^\d{1,2}[;:]?(\d{2})?((\s?)+(?i:[AP]M)?)?$";
+
+            /* Regex:
+             * Start of the string
+             * 2 digits
+             * either ; or : - optional
+             * 2 digits - optional
+             * case insensitive
+             * any number of whitespaces
+             * fail if "AM" is present
+             * PM - optional
+             * end of the string
+             */
+            string valid_24hour_format = @"^\d{2}[;:]?(\d{2})?(?i:(\s?)+(?!AM)(PM)?)?$";
+
+            if (Regex.IsMatch(value, valid_time_format))
+            {
+                if (Is24HourFormat(value))
+                {
+                    return Regex.IsMatch(value, valid_24hour_format);
+                }
+                else
+                    return true;
+            }
+            else
+                return false;
+        }
+        public static bool Is24HourFormat(string value)
+        {
+            /* Regex: 
+             * at the start of the string 
+             * 2 digits
+             * a non-digit character, or the end of the string (not captured)
+             * OR
+             * 2 more digits
+             */
+            if (value.Length >= 2 && Regex.IsMatch(value, @"^\d{2}((?:\D|$)|\d{2})"))
+            {
+                int hour = Convert.ToInt32(value.Substring(0, 2));
+                return hour >= 13 && hour <= 23;
+            }
+            else
+                return false;
+        }
+        public static bool TimePeriodPresent(string value)
+        {
+            return Regex.IsMatch(value, @"(?i)[AP]M$");
+        }
+        private static bool ContainsMinutes(string value)
+        {
+            // Regex: looks for 1 or 2 digits, a colon, then 2 digits .
+            return Regex.IsMatch(value, @"^\d{1,2}:\d{2}");
+        }
+        private static string CleanTimeString(string value, bool remove_period = false)
+        {
+            value = value.Trim();
+            value = value.Replace(";", ":");
+            value = value.Replace(" ", "");
+
+            bool period_present = TimePeriodPresent(value);
+
+            if (period_present && remove_period)
+                value = value.Remove(value.Length - 2, 2);
+
+            if (!value.Contains(":"))
+            {
+                // Regex: if there are only 3, or 1 digits
+                // followed by either a non digit, or the end of the string
+                if (Regex.IsMatch(value, @"^(\d{3}|\d)(?:\D|$)"))
+                    value = value.Insert(1, ":");
+                else
+                    value = value.Insert(2, ":");
+            }
+
+            // if there is only 1 hour digit, add a 0 to the front.
+            if (Regex.IsMatch(value, @"^\d:"))
+                value = "0" + value;
+
             return value;
+        }
+        private static DateTime ClampToWorkHours(DateTime value)
+        {
+            if (value.TimeOfDay < work_hours_start.TimeOfDay || value.TimeOfDay > work_hours_end.TimeOfDay)
+            {
+                switch (value.ToString("tt"))
+                {
+                    case "AM":
+                        value = value.AddHours(12);
+                        break;
+                    case "PM":
+                        value = value.AddHours(-12);
+                        break;
+                }
+            }
+
+            return value;
+        }
+        public static DateTime? StringToDateTime(string value)
+        {
+            if (!IsValidTimeFormat(value))
+                return null;
+
+            DateTime return_val;
+            string time_format;
+            bool time_period_present = false;
+            bool format_24_hour = Is24HourFormat(value);
+
+            value = CleanTimeString(value, format_24_hour);
+
+            if (format_24_hour)
+                time_format = "HH:";
+            else
+            {
+                int hour_digit_count = value.Length;
+
+                if (time_period_present = TimePeriodPresent(value))
+                    hour_digit_count -= 2;
+
+                if (hour_digit_count > 3)
+                    time_format = "hh:";
+                else
+                    time_format = "hh:";
+            }
+
+            if (ContainsMinutes(value))
+                time_format += "mm";
+
+            if (!format_24_hour && TimePeriodPresent(value))
+                time_format += "tt";
+
+            if (!DateTime.TryParseExact(value, time_format, CultureInfo.InvariantCulture, DateTimeStyles.None, out return_val))
+                return null;
+            else
+            {
+                return_val = today.Date + return_val.TimeOfDay;
+
+                if (!time_period_present && !format_24_hour)
+                    return_val = ClampToWorkHours(return_val);
+
+                return return_val;
+            }
         }
     }
 
@@ -263,6 +461,10 @@ namespace TimeTrack
 
 
 /*REFERENCES
+ * 
+ * Data Binding
+ * https://www.wpf-tutorial.com/data-binding/introduction/
+ * 
  * Implementing OnPropertyChanged
  * https://docs.microsoft.com/en-us/dotnet/desktop/wpf/data/how-to-implement-property-change-notification?view=netframeworkdesktop-4.8
  * 
@@ -274,4 +476,7 @@ namespace TimeTrack
  * 
  * Embedding DLL/referencess
  * https://stackoverflow.com/questions/189549/embedding-dlls-in-a-compiled-executable
+ * 
+ * Handling/Validating Text Input
+ * https://stackoverflow.com/questions/1268552/how-do-i-get-a-textbox-to-only-accept-numeric-input-in-wpf
  */

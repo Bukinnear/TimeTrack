@@ -7,31 +7,37 @@
         mc:Ignorable="d"
         Title="Time Track" Height="450" Width="780" Icon="time2.png">
 
+    <Window.Resources>
+        <local:TimeConvert x:Key="TimeConvert"/>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*" />
-            <ColumnDefinition Width="2.5*" />
-            <ColumnDefinition Width="1*" MinWidth="180" MaxWidth="150"/>
+            <ColumnDefinition Width="169*" />
+            <ColumnDefinition Width="331*" />
+            <ColumnDefinition Width="92*"/>
+            <ColumnDefinition Width="180*" MinWidth="180" MaxWidth="150"/>
         </Grid.ColumnDefinitions>
 
         <DataGrid 
-            Name="DgTimeRecords" ItemsSource="{Binding TimeRecords}" AutoGenerateColumns="False" 
-            CanUserAddRows="False" CanUserReorderColumns="False" CanUserSortColumns="False"
-            CellEditEnding="DgTimeRecords_CellEditEnding"
-            Grid.Column="1" Margin="12,12,12,12" HorizontalAlignment="Stretch"
-            BorderBrush="LightCoral" BorderThickness="1"
-            HorizontalGridLinesBrush="White" VerticalGridLinesBrush="White" AlternatingRowBackground="GhostWhite">
-            <DataGrid.Columns>                
+            Name="DgTimeRecords" ItemsSource="{Binding Source=time_records}"
+            BorderBrush="LightCoral" BorderThickness="1" 
+            HorizontalGridLinesBrush="White" VerticalGridLinesBrush="White" AlternatingRowBackground="GhostWhite"
+            AutoGenerateColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False" Grid.Column="1" Margin="12,12,12,12" 
+            HorizontalAlignment="Stretch" CanUserAddRows="False" HorizontalScrollBarVisibility="Disabled"
+            CellEditEnding="DgTimeRecords_CellEditEnding" Grid.ColumnSpan="2">
+
+            <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="" Width="30" Binding="{Binding Recorded}"/>
-                <DataGridTextColumn Header="Start" MinWidth="60" Binding="{Binding StartTime}"/>
-                <DataGridTextColumn Header="End" MinWidth="60" Binding="{Binding EndTime}"/>
+                <DataGridTextColumn Header="Start" MinWidth="60" Binding="{Binding StartTime, Converter={StaticResource TimeConvert}}"/>
+                <DataGridTextColumn Header="End" MinWidth="60" Binding="{Binding EndTime, Converter={StaticResource TimeConvert}}"/>
                 <DataGridTextColumn Header="Case" MinWidth="80" Binding="{Binding CaseNumber}"/>
                 <DataGridTextColumn Header="Notes" MinWidth="160" Binding="{Binding Notes}"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <Grid Grid.Column="2">
-            
+        <Grid Grid.Column="3">
+
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
