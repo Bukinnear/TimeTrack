@@ -20,7 +20,7 @@
         </Grid.ColumnDefinitions>
 
         <DataGrid 
-            Name="DgTimeRecords" ItemsSource="{Binding Source=time_records}"
+            Name="DgTimeRecords" ItemsSource="{Binding TimeRecords}"
             BorderBrush="LightCoral" BorderThickness="1" 
             HorizontalGridLinesBrush="White" VerticalGridLinesBrush="White" AlternatingRowBackground="GhostWhite"
             AutoGenerateColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False" Grid.Column="1" Margin="12,12,12,12" 
