@@ -40,8 +40,8 @@ namespace TimeTrack
             InitializeComponent();
             this.DataContext = time_keeper;
 
-            ImportFromCSV("DEBUG.csv");
-            //ImportFromCSV(CSVName());
+            //ImportFromCSV("DEBUG.csv");
+            ImportFromCSV(CSVName());
 
             FldStartTime.Focus();
         }
@@ -71,7 +71,8 @@ namespace TimeTrack
             if (DgTimeRecords.SelectedItem != null)
             {
                 TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
-                string text = selected.StartTime + " - " + selected.EndTime + "\n" + selected.Notes;
+                string text = ((DateTime)selected.StartTime).ToShortTimeString() + " - " + 
+                    ((DateTime)selected.EndTime).ToShortTimeString() + "\n" + selected.Notes;
                 Clipboard.SetText(text);
                 selected.Recorded = true;
             }
