@@ -24,12 +24,15 @@ using System.Linq.Expressions;
 using CsvHelper;
 using CsvHelper.Configuration;
 using System.Runtime.InteropServices.WindowsRuntime;
+using CsvHelper.Configuration.Attributes;
+using System.Runtime.InteropServices;
 
 namespace TimeTrack
 {
     public partial class MainWindow : Window
     {
-        TimeKeeper time_keeper;
+        private TimeKeeper time_keeper;
+
         public MainWindow()
         {
             time_keeper = new TimeKeeper();
@@ -40,35 +43,27 @@ namespace TimeTrack
             ImportFromCSV("DEBUG.csv");
             //ImportFromCSV(CSVName());
 
-            //DgTimeRecords.ItemsSource = time_records;
             FldStartTime.Focus();
         }
 
         private void BtnSubmit(object sender, RoutedEventArgs e)
         {
-            DateTime? start_time = TimeString.StringToDateTime(FldStartTime.Text);
-            DateTime? end_time = TimeString.StringToDateTime(FldEndTime.Text);
-            /*
-            if (start_time != null && end_time != null)
+            if (time_keeper.SubmitEntry())
             {
-                time_records.Add(new TimeEntry((DateTime)start_time, (DateTime)end_time, FldCaseNumber.Text, FldNotes.Text));
-                ClearAndSetFields();
-                DgTimeRecords.SelectedIndex = time_records.Count - 1;
+                time_keeper.ClearFieldsAndSetStartTime();
+                DgTimeRecords.SelectedIndex = time_keeper.Entries.Count - 1;
                 DgTimeRecords.Focus();
                 ExportToCSV(CSVName());
-            }*/
+            }
         }
 
         private void BtnInsert(object sender, RoutedEventArgs e)
         {
-            
-            //int insert_index = DgTimeRecords.SelectedIndex >= 0 ? DgTimeRecords.SelectedIndex + 1 : time_records.Count;
-            
-            //time_records.Insert(insert_index, new TimeEntry());
-            
-            //DgTimeRecords.SelectedIndex = insert_index;
-            DgTimeRecords.Focus();
-             
+            if (time_keeper.InsertEntry(DgTimeRecords.SelectedIndex + 1, new TimeEntry()))
+            {
+                DgTimeRecords.SelectedIndex = DgTimeRecords.SelectedIndex + 1;
+                DgTimeRecords.Focus();
+            }
         }
 
         private void BtnExport(object sender, RoutedEventArgs e)
@@ -99,48 +94,27 @@ namespace TimeTrack
             DgTimeRecords.Focus();
         }
 
-        private void ClearAndSetFields()
-        {
-            FldStartTime.Text = FldEndTime.Text;
-
-            FldEndTime.Clear();
-            FldCaseNumber.Clear();
-            FldNotes.Clear();
-
-            FldEndTime.Focus();
-        }
-
-        private void ClearFields()
-        {
-            FldStartTime.Clear();
-            FldEndTime.Clear();
-            FldCaseNumber.Clear();
-            FldNotes.Clear();
-
-            FldStartTime.Focus();
-        }
-
         private string CSVName()
         {
-            return "TimeTrack_" + DateTime.Today.ToString("yyyy-MM-dd") + ".csv";
+            return "TimeTrack_" + time_keeper.Today.ToString("yyyy-MM-dd") + ".csv";
         }
 
         public void ExportToCSV(string file)
-        {/*
+        {
             try
             {
                 using (var writer = new StreamWriter(file))
                 using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                 {
                     csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
-                    csv.WriteRecords(time_records);
+                    csv.WriteRecords(time_keeper.Entries);
                 }
             }
-            catch(Exception) { }*/
+            catch(Exception) { }
         }
 
         public void ImportFromCSV(string file)
-        {/*
+        {
             try
             {
                 if (File.Exists(file))
@@ -150,11 +124,11 @@ namespace TimeTrack
                     {
                         csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
                         foreach (var i in csv.GetRecords<TimeEntry>())
-                            time_records.Add(i);
+                            time_keeper.AddEntry(i);
                     }
                 }
             }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }*/
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
         private void DgTimeRecords_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
@@ -181,7 +155,6 @@ namespace TimeTrack
             notes = "";
             ID = ID_index += 1;
         }
-
         public TimeEntry(DateTime in_start, DateTime in_end, string in_case, string in_notes)
         {
             start_time = in_start;
@@ -238,38 +211,109 @@ namespace TimeTrack
         }
     }
 
-    public class TimeConvert : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            if (value == null)
-                return null;
-            else
-                return ((DateTime)value).ToShortTimeString();
-        }
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return TimeString.StringToDateTime((string)value);
-        }
-    }
-
     public class TimeKeeper : INotifyPropertyChanged
     {
         public TimeKeeper()
         {
             time_records = new ObservableCollection<TimeEntry>();
+            Today = DateTime.Today;
         }
 
         private ObservableCollection<TimeEntry> time_records;
-        public ObservableCollection<TimeEntry> TimeRecords
+        private string start_time;
+        private string end_time;
+        private string case_no;
+        private string notes;
+
+        public ObservableCollection<TimeEntry> Entries
         {
             get { return time_records; }
             set { time_records = value; OnPropertyChanged(); }
         }
+        public string StartTimeField
+        {
+            get { return start_time; }
+            set { start_time = value; OnPropertyChanged(); }
+        }
+        public DateTime? StartTimeFieldAsTime() 
+        { return TimeStringConverter.StringToDateTime(start_time); }
+        public string EndTimeField
+        {
+            get { return end_time; }
+            set { end_time = value; OnPropertyChanged(); }
+        }
+        public DateTime? EndTimeFieldAsTime() 
+        { return TimeStringConverter.StringToDateTime(end_time); }
+        public string CaseNumberField
+        {
+            get { return case_no; }
+            set { case_no = value; OnPropertyChanged(); }
+        }
+        public string NotesField
+        {
+            get { return notes; }
+            set { notes = value; OnPropertyChanged(); }
+        }
+        public DateTime Today { get; }
+
+        public void AddEntry(DateTime start_time, DateTime end_time, string case_number = "", string notes = "")
+        {
+            time_records.Add(new TimeEntry(start_time, end_time, case_number, notes));
+        }
+        public void AddEntry(TimeEntry entry)
+        {
+            time_records.Add(entry);
+        }
+        public bool InsertEntry(int index, DateTime start_time, DateTime end_time, string case_number = "", string notes = "")
+        {
+            if (index <= time_records.Count)
+            {
+                time_records.Insert(index, new TimeEntry(start_time, end_time, case_number, notes));
+                return true;
+            }
+            else
+                return false;
+        }
+        public bool InsertEntry(int index, TimeEntry entry)
+        {
+            if (index <= time_records.Count)
+            {
+                time_records.Insert(index, entry);
+                return true;
+            }
+            else
+                return false;
+        }
+        public bool SubmitEntry()
+        {
+            DateTime? start_time = StartTimeFieldAsTime();
+            DateTime? end_time = EndTimeFieldAsTime();
+
+            if (start_time != null && end_time != null)
+            {
+                AddEntry((DateTime)start_time, (DateTime)end_time, case_no, notes);
+                return true;
+            }
+            else
+                return false;
+        }
+        public void ClearFieldsAndSetStartTime()
+        {
+            StartTimeField = ((DateTime)EndTimeFieldAsTime()).ToShortTimeString();
+
+            EndTimeField = "";
+            CaseNumberField = "";
+            NotesField = "";
+        }
+        public void ClearFields()
+        {
+            StartTimeField = "";
+            EndTimeField = "";
+            CaseNumberField = "";
+            NotesField = "";
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
-
-
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
@@ -277,7 +321,7 @@ namespace TimeTrack
         }
     }
 
-    public static class TimeString
+    public static class TimeStringConverter
     {
         static DateTime today = DateTime.Today;
         static DateTime work_hours_start = DateTime.ParseExact("07:00AM", "hh:mmtt", CultureInfo.InvariantCulture);
@@ -438,6 +482,20 @@ namespace TimeTrack
 
                 return return_val;
             }
+        }
+    }
+    public class TimeEntryUIConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value == null)
+                return null;
+            else
+                return ((DateTime)value).ToShortTimeString();
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return TimeStringConverter.StringToDateTime((string)value);
         }
     }
 

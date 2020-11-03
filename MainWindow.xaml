@@ -8,7 +8,7 @@
         Title="Time Track" Height="450" Width="780" Icon="time2.png">
 
     <Window.Resources>
-        <local:TimeConvert x:Key="TimeConvert"/>
+        <local:TimeEntryUIConverter x:Key="TimeEntryUIConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -20,7 +20,7 @@
         </Grid.ColumnDefinitions>
 
         <DataGrid 
-            Name="DgTimeRecords" ItemsSource="{Binding TimeRecords}"
+            Name="DgTimeRecords" ItemsSource="{Binding Entries}"
             BorderBrush="LightCoral" BorderThickness="1" 
             HorizontalGridLinesBrush="White" VerticalGridLinesBrush="White" AlternatingRowBackground="GhostWhite"
             AutoGenerateColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False" Grid.Column="1" Margin="12,12,12,12" 
@@ -29,8 +29,8 @@
 
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="" Width="30" Binding="{Binding Recorded}"/>
-                <DataGridTextColumn Header="Start" MinWidth="60" Binding="{Binding StartTime, Converter={StaticResource TimeConvert}}"/>
-                <DataGridTextColumn Header="End" MinWidth="60" Binding="{Binding EndTime, Converter={StaticResource TimeConvert}}"/>
+                <DataGridTextColumn Header="Start" MinWidth="60" Binding="{Binding StartTime, Converter={StaticResource TimeEntryUIConverter}}"/>
+                <DataGridTextColumn Header="End" MinWidth="60" Binding="{Binding EndTime, Converter={StaticResource TimeEntryUIConverter}}"/>
                 <DataGridTextColumn Header="Case" MinWidth="80" Binding="{Binding CaseNumber}"/>
                 <DataGridTextColumn Header="Notes" MinWidth="160" Binding="{Binding Notes}"/>
             </DataGrid.Columns>
@@ -68,15 +68,15 @@
                     <ColumnDefinition Width="1*" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="0" FontWeight="Bold">Case Number</TextBlock>
-                <TextBlock Grid.Row="4" FontWeight="Bold">Start Time:</TextBlock>
-                <TextBlock Grid.Row="8" FontWeight="Bold">Finish Time:</TextBlock>
+                <TextBlock Grid.Row="0" FontWeight="Bold">Start Time:</TextBlock>
+                <TextBlock Grid.Row="4" FontWeight="Bold">Finish Time:</TextBlock>
+                <TextBlock Grid.Row="8" FontWeight="Bold">Case Number</TextBlock>
                 <TextBlock Grid.Row="12" FontWeight="Bold">Notes</TextBlock>
 
-                <TextBox Name="FldCaseNumber" Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="0"/>
-                <TextBox Name="FldStartTime" Grid.Row="6" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="1" />
-                <TextBox Name="FldEndTime" Grid.Row="10" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="2"/>
-                <TextBox Name="FldNotes" Grid.Row="14" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="3"/>
+                <TextBox Name="FldStartTime" Text="{Binding StartTimeField}" Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="1" />
+                <TextBox Name="FldEndTime" Text="{Binding EndTimeField}" Grid.Row="6" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="2"/>
+                <TextBox Name="FldCaseNumber" Text="{Binding CaseNumberField}" Grid.Row="10" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="0"/>
+                <TextBox Name="FldNotes" Text="{Binding NotesField}" Grid.Row="14" Grid.ColumnSpan="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="3"/>
             </Grid>
 
             <Grid Margin="0,0,12,12" Grid.Row="1">
