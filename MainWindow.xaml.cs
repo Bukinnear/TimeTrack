@@ -63,6 +63,7 @@ namespace TimeTrack
             {
                 DgTimeRecords.SelectedIndex = DgTimeRecords.SelectedIndex + 1;
                 DgTimeRecords.Focus();
+                ExportToCSV(CSVName());
             }
         }
 
