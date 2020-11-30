@@ -383,7 +383,12 @@ namespace TimeTrack
                     if (i.CaseNumber != null && i.CaseNumber != "")
                         time += (TimeSpan)(i.EndTime - i.StartTime);
                     else
-                        gap += (TimeSpan)(i.EndTime - i.StartTime);
+                    {
+                        if (i.Notes != null && i.Notes.ToLower().Trim() == "lunch")
+                            continue;
+                        else
+                            gap += (TimeSpan)(i.EndTime - i.StartTime);
+                    }
                 }
             }
 
