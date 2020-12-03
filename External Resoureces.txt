@@ -1,0 +1,20 @@
+﻿/*REFERENCES
+ * 
+ * Data Binding
+ * https://www.wpf-tutorial.com/data-binding/introduction/
+ * 
+ * Implementing OnPropertyChanged
+ * https://docs.microsoft.com/en-us/dotnet/desktop/wpf/data/how-to-implement-property-change-notification?view=netframeworkdesktop-4.8
+ * 
+ * CSVHelper
+ * https://joshclose.github.io/CsvHelper/getting-started/ 
+ * 
+ * DataGrid Post-Editing Event
+ * https://stackoverflow.com/questions/3938040/wpf-datagrid-row-editing-ended-event/49948858
+ * 
+ * Embedding DLL/referencess
+ * https://stackoverflow.com/questions/189549/embedding-dlls-in-a-compiled-executable
+ * 
+ * Handling/Validating Text Input
+ * https://stackoverflow.com/questions/1268552/how-do-i-get-a-textbox-to-only-accept-numeric-input-in-wpf
+ */
