@@ -44,37 +44,64 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0, 0, 0, 0" MinHeight="110">
-
+            <Grid Grid.Column="1" Margin="0, 0, 0, 0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="2"/>
-                    <RowDefinition Height="auto" MinHeight="32"/>
-                    <RowDefinition Height="12"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="2"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="12"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="2"/>
-                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" FontWeight="Bold">Selected Time</TextBlock>
-                <TextBlock Grid.Row="2" Text="{Binding SelectedTime}"/>
+                <Grid Grid.Row="0" Margin="0, 0, 0, 0" HorizontalAlignment="Stretch">
 
-                <TextBlock Grid.Row="4" FontWeight="Bold">Time (Hours)</TextBlock>
-                <TextBlock Grid.Row="6" Text="{Binding HoursTotal}"/>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="8" FontWeight="Bold">Gaps (Minutes)</TextBlock>
-                <TextBlock Grid.Row="10" Text="{Binding GapsTotal}"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="2"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="12"/>
+                    </Grid.RowDefinitions>
+
+
+                    <TextBlock Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Stretch" TextAlignment="Center">Total</TextBlock>
+                    <TextBlock Grid.Row="1" Foreground="SlateGray" FontWeight="Normal" HorizontalAlignment="Stretch" TextAlignment="Center">hours</TextBlock>
+                    <TextBlock Grid.Row="3" HorizontalAlignment="Stretch" TextAlignment="Center" Text="{Binding HoursTotal}"/>
+
+                    <TextBlock Grid.Row="0" Grid.Column="1" FontWeight="Bold" HorizontalAlignment="Stretch" TextAlignment="Center">Gaps</TextBlock>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Foreground="SlateGray" FontWeight="Normal" HorizontalAlignment="Stretch" TextAlignment="Center">minutes</TextBlock>
+                    <TextBlock Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" TextAlignment="Center" Text="{Binding GapsTotal}"/>
+                </Grid>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="2"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" FontWeight="Bold" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" TextAlignment="Center">Selected Time</TextBlock>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Foreground="SlateGray" FontWeight="Normal" HorizontalAlignment="Stretch" TextAlignment="Center">hours</TextBlock>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Foreground="SlateGray" FontWeight="Normal" HorizontalAlignment="Stretch" TextAlignment="Center">minutes</TextBlock>
+                    <TextBlock Grid.Row="3" Grid.Column="0" HorizontalAlignment="Stretch" TextAlignment="Center" Text="{Binding SelectedHours}"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" TextAlignment="Center" Text="{Binding SelectedMins}"/>
+                </Grid>
+
             </Grid>
 
-            <Grid Margin="0,12,0,0" Grid.Row="1" ShowGridLines="False">
+            <Grid Margin="0,12,0,0" Grid.Row="1">
 
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -95,69 +122,57 @@
                     <RowDefinition Height="12"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" FontWeight="Bold">Start Time:</TextBlock>
-                <TextBlock Grid.Row="4" FontWeight="Bold">Finish Time:</TextBlock>
+                <TextBlock Grid.Row="0" FontWeight="Bold">Start Time</TextBlock>
+                <TextBlock Grid.Row="4" FontWeight="Bold">Finish Time</TextBlock>
                 <TextBlock Grid.Row="8" FontWeight="Bold">Case Number</TextBlock>
                 <TextBlock Grid.Row="12" FontWeight="Bold">Notes</TextBlock>
 
                 <TextBox Name="FldStartTime" Text="{Binding StartTimeField}" Grid.Row="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="0" />
                 <TextBox Name="FldEndTime" Text="{Binding EndTimeField}" Grid.Row="6" BorderBrush="LightCoral" BorderThickness="1" TabIndex="1"/>
                 <TextBox Name="FldCaseNumber" Text="{Binding CaseNumberField}" Grid.Row="10" BorderBrush="LightCoral" BorderThickness="1" TabIndex="2"/>
-                <TextBox Name="FldNotes" Text="{Binding NotesField}" Grid.Row="14" BorderBrush="LightCoral" BorderThickness="1" TabIndex="3"/>
+                <TextBox Name="FldNotes" Text="{Binding NotesField}" Height="50" TextWrapping="Wrap" Grid.Row="14" BorderBrush="LightCoral" BorderThickness="1" TabIndex="3"/>
             </Grid>
 
-            <Grid Margin="0,0,12,12" Grid.Row="2">
+            <Grid Margin="0,0,0,0" Grid.Row="2">
+                
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="4"/>
                     <RowDefinition Height="auto"/>
-                    <RowDefinition Height="8"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="8"/>
-                    <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="4"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-
                 <Button Grid.Column="0" Grid.Row="0" TabIndex="4"
-                        Height="30" MaxWidth="100" HorizontalAlignment="Stretch" 
+                        Height="30" HorizontalAlignment="Stretch" 
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnSubmit" ClickMode="Release">
                     Submit
                 </Button>
 
-                <Button Grid.Column="2" Grid.Row="0" Height="30" Width="auto" HorizontalAlignment="Stretch" 
-                    BorderBrush="Black" BorderThickness="1"
-                    Click="BtnExport" ClickMode="Release">
+                <Button Grid.Column="2" Grid.Row="0" TabIndex="5"
+                        Height="30" HorizontalAlignment="Stretch"
+                        BorderBrush="Black" BorderThickness="1"
+                        Click="BtnExport" ClickMode="Release">
                     Export
                 </Button>
 
-                <Button Grid.Column="0" Grid.Row="2" Height="30" Width="auto" HorizontalAlignment="Stretch" 
-                    BorderBrush="Black" BorderThickness="1"
-                    Click="BtnInsert" ClickMode="Release">
+                <Button Grid.Column="0" Grid.Row="2" TabIndex="6"
+                        Height="30" HorizontalAlignment="Stretch"
+                        BorderBrush="Black" BorderThickness="1"
+                        Click="BtnInsert" ClickMode="Release">
                     Insert Record
                 </Button>
 
-                <Button Grid.Column="2" Grid.Row="2" Height="30" Width="auto" HorizontalAlignment="Stretch" 
-                    BorderBrush="Black" BorderThickness="1"
-                    Click="BtnUpdate" ClickMode="Release">
+                <Button Grid.Column="2" Grid.Row="2" TabIndex="7"
+                        Height="30" HorizontalAlignment="Stretch" 
+                        BorderBrush="Black" BorderThickness="1"
+                        Click="BtnUpdate" ClickMode="Release">
                     Refresh UI
-                </Button>
-
-                <Button Grid.Column="0" Grid.Row="4" Height="30" Width="auto" HorizontalAlignment="Stretch" 
-                    BorderBrush="Black" BorderThickness="1"
-                    Click="BtnMoveUp" ClickMode="Release">
-                    ⬆
-                </Button>
-
-                <Button Grid.Column="2" Grid.Row="4" Height="30" Width="auto" HorizontalAlignment="Stretch" 
-                    BorderBrush="Black" BorderThickness="1"
-                    Click="BtnMoveDown" ClickMode="Release">
-                    ⬇
                 </Button>
             </Grid>
         </Grid>

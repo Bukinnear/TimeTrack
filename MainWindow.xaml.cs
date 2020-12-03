@@ -40,8 +40,8 @@ namespace TimeTrack
             InitializeComponent();
             this.DataContext = time_keeper;
 
-            //ImportFromCSV("DEBUG.csv");
-            ImportFromCSV(CSVName());
+            ImportFromCSV("DEBUG.csv");
+            //ImportFromCSV(CSVName());
 
             FldStartTime.Focus();
             time_keeper.UpdateSelectedTime(-1);
@@ -244,7 +244,8 @@ namespace TimeTrack
 
         private double hours_total;
         private double gaps_total;
-        private string selected_time;
+        private string selected_hours;
+        private string selected_mins;
 
         // Accessor functions
 
@@ -296,11 +297,18 @@ namespace TimeTrack
             set { gaps_total = value; OnPropertyChanged(); }
         }
 
-        public string SelectedTime
+        public string SelectedHours
         {
-            get => selected_time;
-            set { selected_time = value; OnPropertyChanged(); }
+            get => selected_hours;
+            set { selected_hours = value; OnPropertyChanged(); }
         }
+
+        public string SelectedMins
+        {
+            get => selected_mins;
+            set { selected_mins = value; OnPropertyChanged(); }
+        }
+
 
         // Functions
 
@@ -403,13 +411,16 @@ namespace TimeTrack
                 var time_span = (time_records[index].EndTime - time_records[index].StartTime);
                 if (time_span != null)
                 {
-                    string format_string = "Hours: {0}\nMinutes: {1}";
-                    SelectedTime = String.Format(format_string, ((TimeSpan)time_span).Hours, ((TimeSpan)time_span).Minutes);
+                    SelectedHours = (((TimeSpan)time_span).Hours).ToString();
+                    SelectedMins = (((TimeSpan)time_span).Minutes).ToString();
                 }    
                 
             }
             else
-                SelectedTime = "No Selection";
+            {
+                SelectedHours = "-";
+                SelectedMins = "-";
+            }    
         }
 
         // Inheritance functions
