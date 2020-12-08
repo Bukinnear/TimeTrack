@@ -60,9 +60,10 @@ namespace TimeTrack
             if (time_keeper.SubmitEntry())
             {
                 time_keeper.ClearFieldsAndSetStartTime();
-                ChkOther.IsEnabled = false;
-                ChkLunch.IsEnabled = false;
+                ChkOther.IsChecked = false;
+                ChkLunch.IsChecked = false;
                 DgTimeRecords.SelectedIndex = time_keeper.Entries.Count - 1;
+                DgTimeRecords.ScrollIntoView(time_keeper.Entries.Last());
                 DgTimeRecords.Focus();
                 ExportToCSV(CSVName());
             }
@@ -70,9 +71,12 @@ namespace TimeTrack
 
         private void BtnInsert(object sender, RoutedEventArgs e)
         {
-            if (time_keeper.InsertEntry(DgTimeRecords.SelectedIndex, new TimeEntry()))
+            var insert = new TimeEntry();
+
+            if (time_keeper.InsertEntry(DgTimeRecords.SelectedIndex, insert))
             {
                 DgTimeRecords.SelectedIndex = DgTimeRecords.SelectedIndex - 1;
+                DgTimeRecords.ScrollIntoView(insert);
                 DgTimeRecords.Focus();
                 ExportToCSV(CSVName());
             }
@@ -311,7 +315,7 @@ namespace TimeTrack
 
         public bool InsertEntry(int index, TimeEntry entry)
         {
-            if (index <= time_records.Count)
+            if (time_records.Count > 0 && index <= time_records.Count)
             {
                 time_records.Insert(index, entry);
                 UpdateTimeTotals();
