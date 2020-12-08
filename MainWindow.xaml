@@ -156,7 +156,7 @@
                         <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <CheckBox Name="ChkLunch" VerticalAlignment="Center" Checked="ChkLunch_Checked" Unchecked="ChkLunch_Unchecked"/>
+                    <CheckBox Name="ChkLunch" VerticalAlignment="Center" Checked="ChkLunch_Checked" Unchecked="ChkLunch_Unchecked" DataContext="null"/>
                     <TextBlock Grid.Column="2">Lunch</TextBlock>
                 </Grid>
 

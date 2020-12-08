@@ -40,11 +40,19 @@ namespace TimeTrack
             InitializeComponent();
             this.DataContext = time_keeper;
 
-            ImportFromCSV("DEBUG.csv");
-            //ImportFromCSV(CSVName());
+            //ImportFromCSV("DEBUG.csv");
+            ImportFromCSV(CSVName());
 
             FldStartTime.Focus();
             time_keeper.UpdateSelectedTime(-1);
+
+            if (time_keeper.Entries.Count > 0)
+            {
+                var last_entry = time_keeper.Entries[time_keeper.Entries.Count - 1];
+                if (last_entry.EndTime != null)
+                    time_keeper.StartTimeField = ((DateTime)last_entry.EndTime).ToShortTimeString();
+            }
+                
         }
 
         private void BtnSubmit(object sender, RoutedEventArgs e)
@@ -52,6 +60,8 @@ namespace TimeTrack
             if (time_keeper.SubmitEntry())
             {
                 time_keeper.ClearFieldsAndSetStartTime();
+                ChkOther.IsEnabled = false;
+                ChkLunch.IsEnabled = false;
                 DgTimeRecords.SelectedIndex = time_keeper.Entries.Count - 1;
                 DgTimeRecords.Focus();
                 ExportToCSV(CSVName());
@@ -60,9 +70,9 @@ namespace TimeTrack
 
         private void BtnInsert(object sender, RoutedEventArgs e)
         {
-            if (time_keeper.InsertEntry(DgTimeRecords.SelectedIndex - 1, new TimeEntry()))
+            if (time_keeper.InsertEntry(DgTimeRecords.SelectedIndex, new TimeEntry()))
             {
-                DgTimeRecords.SelectedIndex = DgTimeRecords.SelectedIndex + 1;
+                DgTimeRecords.SelectedIndex = DgTimeRecords.SelectedIndex - 1;
                 DgTimeRecords.Focus();
                 ExportToCSV(CSVName());
             }
