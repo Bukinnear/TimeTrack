@@ -51,8 +51,7 @@ namespace TimeTrack
                 var last_entry = time_keeper.Entries[time_keeper.Entries.Count - 1];
                 if (last_entry.EndTime != null)
                     time_keeper.StartTimeField = ((DateTime)last_entry.EndTime).ToShortTimeString();
-            }
-                
+            }                
         }
 
         private void BtnSubmit(object sender, RoutedEventArgs e)
@@ -118,6 +117,46 @@ namespace TimeTrack
             ExportToCSV(CSVName());
         }
 
+        private void ChkLunch_Checked(object sender, RoutedEventArgs e)
+        {
+            ChkOther.IsChecked = false;
+
+            time_keeper.CaseNumberField = null;
+            FldCaseNumber.IsEnabled = false;
+            FldCaseNumber.Background = Brushes.LightGray;
+
+            time_keeper.NotesField = "Lunch";
+            FldNotes.IsEnabled = false;
+            FldNotes.Background = Brushes.LightGray;
+        }
+
+        private void ChkLunch_Unchecked(object sender, RoutedEventArgs e)
+        {
+            time_keeper.CaseNumberField = null;
+            FldCaseNumber.IsEnabled = true;
+            FldCaseNumber.Background = Brushes.White;
+
+            time_keeper.NotesField = null;
+            FldNotes.IsEnabled = true;
+            FldNotes.Background = Brushes.White;
+        }
+
+        private void ChkOther_Checked(object sender, RoutedEventArgs e)
+        {
+            ChkLunch.IsChecked = false;
+
+            time_keeper.CaseNumberField = "Other";
+            FldCaseNumber.IsEnabled = false;
+            FldCaseNumber.Background = Brushes.LightGray;
+        }
+
+        private void ChkOther_Unchecked(object sender, RoutedEventArgs e)
+        {
+            time_keeper.CaseNumberField = null;
+            FldCaseNumber.IsEnabled = true;
+            FldCaseNumber.Background = Brushes.White;
+        }
+
         private string CSVName()
         {
             return "TimeTrack_" + time_keeper.Today.ToString("yyyy-MM-dd") + ".csv";
@@ -164,43 +203,6 @@ namespace TimeTrack
         {
             if (DgTimeRecords.SelectedItem != null)
                 time_keeper.UpdateSelectedTime(DgTimeRecords.SelectedIndex);
-        }
-
-        private void ChkLunch_Checked(object sender, RoutedEventArgs e)
-        {
-            ChkOther.IsChecked = false;
-
-            time_keeper.CaseNumberField = null;
-            FldCaseNumber.IsEnabled = false;
-            FldCaseNumber.Background = Brushes.LightGray;
-
-            time_keeper.NotesField = "Lunch";
-            FldNotes.IsEnabled = false;
-            FldNotes.Background = Brushes.LightGray;
-        }
-        private void ChkLunch_Unchecked(object sender, RoutedEventArgs e)
-        {
-            time_keeper.CaseNumberField = null;
-            FldCaseNumber.IsEnabled = true;
-            FldCaseNumber.Background = Brushes.White;
-
-            time_keeper.NotesField = null;
-            FldNotes.IsEnabled = true;
-            FldNotes.Background = Brushes.White;
-        }
-        private void ChkOther_Checked(object sender, RoutedEventArgs e)
-        {
-            ChkLunch.IsChecked = false;
-
-            time_keeper.CaseNumberField = "Other";
-            FldCaseNumber.IsEnabled = false;
-            FldCaseNumber.Background = Brushes.LightGray;
-        }
-        private void ChkOther_Unchecked(object sender, RoutedEventArgs e)
-        {
-            time_keeper.CaseNumberField = null;
-            FldCaseNumber.IsEnabled = true;
-            FldCaseNumber.Background = Brushes.White;
         }
     }
 
