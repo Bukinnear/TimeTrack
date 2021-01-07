@@ -35,23 +35,15 @@ namespace TimeTrack
 
         public MainWindow()
         {
-            time_keeper = new TimeKeeper();
-
             InitializeComponent();
-            this.DataContext = time_keeper;
+            time_keeper = DataContext as TimeKeeper;
 
             //ImportFromCSV("DEBUG.csv");
             ImportFromCSV(CSVName());
 
             FldStartTime.Focus();
-            time_keeper.UpdateSelectedTime(-1);
-
-            if (time_keeper.Entries.Count > 0)
-            {
-                var last_entry = time_keeper.Entries[time_keeper.Entries.Count - 1];
-                if (last_entry.EndTime != null)
-                    time_keeper.StartTimeField = ((DateTime)last_entry.EndTime).ToShortTimeString();
-            }                
+            time_keeper.UpdateSelectedTime();
+            time_keeper.SetStartTimeField();
         }
 
         private void BtnSubmit(object sender, RoutedEventArgs e)
@@ -59,7 +51,6 @@ namespace TimeTrack
             if (time_keeper.SubmitEntry())
             {
                 time_keeper.ClearFieldsAndSetStartTime();
-                ChkOther.IsChecked = false;
                 ChkLunch.IsChecked = false;
                 DgTimeRecords.SelectedIndex = time_keeper.Entries.Count - 1;
                 DgTimeRecords.ScrollIntoView(time_keeper.Entries.Last());
@@ -110,17 +101,8 @@ namespace TimeTrack
             DgTimeRecords.Focus();
         }
 
-        private void BtnUpdate(object sender, RoutedEventArgs e)
-        {
-            time_keeper.UpdateTimeTotals();
-            time_keeper.UpdateSelectedTime(DgTimeRecords.SelectedIndex);
-            ExportToCSV(CSVName());
-        }
-
         private void ChkLunch_Checked(object sender, RoutedEventArgs e)
         {
-            ChkOther.IsChecked = false;
-
             time_keeper.CaseNumberField = null;
             FldCaseNumber.IsEnabled = false;
             FldCaseNumber.Background = Brushes.LightGray;
@@ -140,23 +122,7 @@ namespace TimeTrack
             FldNotes.IsEnabled = true;
             FldNotes.Background = Brushes.White;
         }
-
-        private void ChkOther_Checked(object sender, RoutedEventArgs e)
-        {
-            ChkLunch.IsChecked = false;
-
-            time_keeper.CaseNumberField = "Other";
-            FldCaseNumber.IsEnabled = false;
-            FldCaseNumber.Background = Brushes.LightGray;
-        }
-
-        private void ChkOther_Unchecked(object sender, RoutedEventArgs e)
-        {
-            time_keeper.CaseNumberField = null;
-            FldCaseNumber.IsEnabled = true;
-            FldCaseNumber.Background = Brushes.White;
-        }
-
+                        
         private string CSVName()
         {
             return "TimeTrack_" + time_keeper.Today.ToString("yyyy-MM-dd") + ".csv";
@@ -202,7 +168,7 @@ namespace TimeTrack
         private void DgTimeRecords_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (DgTimeRecords.SelectedItem != null)
-                time_keeper.UpdateSelectedTime(DgTimeRecords.SelectedIndex);
+                time_keeper.UpdateSelectedTime();
         }
     }
 
@@ -214,18 +180,6 @@ namespace TimeTrack
             today = DateTime.Today;
         }
 
-        private DateTime today;
-        private ObservableCollection<TimeEntry> time_records;
-        private string start_time;
-        private string end_time;
-        private string case_no;
-        private string notes;
-
-        private double hours_total;
-        private double gaps_total;
-        private string selected_hours;
-        private string selected_mins;
-
         // Accessor functions
 
         public DateTime Today { get => today; }
@@ -235,70 +189,63 @@ namespace TimeTrack
             get => time_records; 
             set { time_records = value; OnPropertyChanged(); }
         }
-
         public string StartTimeField
         {
             get => start_time;
             set { start_time = value; OnPropertyChanged(); }
         }
-
         public string EndTimeField
         {
             get => end_time; 
             set { end_time = value; OnPropertyChanged(); }
         }
-
         public DateTime? StartTimeFieldAsTime() => TimeStringConverter.StringToDateTime(start_time); 
-
         public DateTime? EndTimeFieldAsTime() => TimeStringConverter.StringToDateTime(end_time); 
-
         public string CaseNumberField
         {
             get => case_no; 
             set { case_no = value; OnPropertyChanged(); }
         }
-
         public string NotesField
         {
             get => notes; 
             set { notes = value; OnPropertyChanged(); }
         }
-
         public double HoursTotal 
         { 
             get => hours_total; 
             set { hours_total = value; OnPropertyChanged(); } 
         }
-
         public double GapsTotal
         {
             get => gaps_total;
             set { gaps_total = value; OnPropertyChanged(); }
         }
-
         public string SelectedHours
         {
             get => selected_hours;
             set { selected_hours = value; OnPropertyChanged(); }
         }
-
         public string SelectedMins
         {
             get => selected_mins;
             set { selected_mins = value; OnPropertyChanged(); }
         }
-
+        public TimeEntry SelectedItem { get => selected_item; set { selected_item = value; OnPropertyChanged(); } }
 
         // Functions
 
         public void AddEntry(DateTime start_time, DateTime end_time, string case_number = "", string notes = "")
         {
-            time_records.Add(new TimeEntry(start_time, end_time, case_number, notes));
+            var entry = new TimeEntry(start_time, end_time, case_number, notes);
+            entry.TimeEntryChanged += HandleTimeEntryChanged;
+            time_records.Add(entry);
             UpdateTimeTotals();
         }
 
         public void AddEntry(TimeEntry entry)
         {
+            entry.TimeEntryChanged += HandleTimeEntryChanged;
             time_records.Add(entry);
             UpdateTimeTotals();
         }
@@ -341,18 +288,26 @@ namespace TimeTrack
                 return false;
         }
 
-        public void ClearFieldsAndSetStartTime()
+        public void RemoveCurrentlySelectedEntry()
         {
-            StartTimeField = ((DateTime)EndTimeFieldAsTime()).ToShortTimeString();
-
-            EndTimeField = "";
-            CaseNumberField = "";
-            NotesField = "";
+            Entries.Remove(SelectedItem);
+            HandleTimeEntryChanged();
+            SelectLastEntry();
+            //UpdateSelectedTime();
         }
 
-        public void ClearFields()
+        public void SelectLastEntry()
         {
-            StartTimeField = "";
+            if (Entries.Count > 0)
+                SelectedItem = Entries.Last();
+            else
+                UpdateSelectedTime();
+        }
+
+        public void ClearFieldsAndSetStartTime()
+        {
+            SetStartTimeField();
+
             EndTimeField = "";
             CaseNumberField = "";
             NotesField = "";
@@ -383,32 +338,78 @@ namespace TimeTrack
             GapsTotal = gap.TotalMinutes;
         }
 
-        public void UpdateSelectedTime(int index)
+        public void UpdateSelectedTime()
         {
-            if (index >= 0 && index < time_records.Count)
+            bool blank_value = false;
+
+            if (SelectedItem != null)
             {
-                var time_span = (time_records[index].EndTime - time_records[index].StartTime);
+                var time_span = (SelectedItem.EndTime - SelectedItem.StartTime);
                 if (time_span != null)
                 {
                     SelectedHours = (((TimeSpan)time_span).Hours).ToString();
                     SelectedMins = (((TimeSpan)time_span).Minutes).ToString();
-                }                
+                }
+                else
+                    blank_value = true;
             }
             else
+                blank_value = true;  
+
+            if (blank_value)
             {
                 SelectedHours = "-";
                 SelectedMins = "-";
-            }    
+            }
         }
 
-        // Inheritance functions
+        public void SetStartTimeField()
+        {
+            if (time_records.Count > 0)
+                StartTimeField = time_records.Last<TimeEntry>().EndTime?.ToShortTimeString();
+            else
+                StartTimeField = null;
+        }
+
+        public void HandleTimeEntryChanged()
+        {
+            UpdateTimeTotals();
+            SetStartTimeField();
+        }
+
+        private ICommand remove_command;
+        public ICommand RemoveCommand
+        {
+            get
+            {
+                if (remove_command == null)
+                    remove_command = new RelayCommand(p => RemoveCurrentlySelectedEntry());
+                return remove_command;
+            }
+        }
+
+        // Inheritance items
 
         public event PropertyChangedEventHandler PropertyChanged;
-
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
+
+        // Private vars
+
+        private DateTime today;
+        private ObservableCollection<TimeEntry> time_records;
+        private string start_time;
+        private string end_time;
+        private string case_no;
+        private string notes;
+
+        private double hours_total;
+        private double gaps_total;
+        private string selected_hours;
+        private string selected_mins;
+        private TimeEntry selected_item;
     }
 
     public static class TimeStringConverter
@@ -575,6 +576,40 @@ namespace TimeTrack
 
                 return return_val;
             }
+        }
+    }
+
+    public class RelayCommand : ICommand
+    {
+        private Action<object> execute;
+        private Func<object, bool> canExecute;
+
+        public RelayCommand(Action<object> execute)
+        {
+            this.execute = execute;
+            this.canExecute = null;
+        }
+
+        public RelayCommand(Action<object> execute, Func<object, bool> canExecute)
+        {
+            this.execute = execute;
+            this.canExecute = canExecute;
+        }
+
+        public event EventHandler CanExecuteChanged
+        {
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
+        }
+
+        public bool CanExecute(object parameter)
+        {
+            return this.canExecute == null || this.CanExecute(parameter);
+        }
+
+        public void Execute(object parameter)
+        {
+            this.execute(parameter);
         }
     }
 }

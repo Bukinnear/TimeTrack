@@ -7,6 +7,10 @@
         mc:Ignorable="d"
         Title="Time Track" Height="530" Width="600" Icon="time2.png">
 
+    <Window.DataContext>
+        <local:TimeKeeper/>
+    </Window.DataContext>
+
     <Window.Resources>
         <local:TimeEntryUIConverter x:Key="TimeEntryUIConverter"/>
     </Window.Resources>
@@ -18,11 +22,11 @@
         </Grid.ColumnDefinitions>
 
         <DataGrid 
-            Name="DgTimeRecords" ItemsSource="{Binding Entries}"
+            Name="DgTimeRecords" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedItem}"
             AutoGenerateColumns="False"  Grid.Column="0" Margin="12,12,12,12" 
             HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Disabled"
-            CanUserAddRows="False" CanUserResizeRows="False"
-            CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False"
+            CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
+            CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False" 
             BorderBrush="LightCoral" BorderThickness="1" 
             HorizontalGridLinesBrush="White" VerticalGridLinesBrush="White" AlternatingRowBackground="GhostWhite"
             CellEditEnding="DgTimeRecords_CellEditEnding" SelectionChanged="DgTimeRecords_SelectionChanged">
@@ -34,6 +38,10 @@
                 <DataGridTextColumn Header="Case" Width="85" Binding="{Binding CaseNumber}"/>
                 <DataGridTextColumn Header="Notes" MinWidth="160" Width="auto" Binding="{Binding Notes}"/>
             </DataGrid.Columns>
+
+            <DataGrid.InputBindings>
+                <KeyBinding Key="Delete" Command="{Binding RemoveCommand}" />
+            </DataGrid.InputBindings>
         </DataGrid>
 
         <Grid Grid.Column="1" Margin="0, 12, 12, 12">
@@ -127,10 +135,25 @@
                 <TextBlock Grid.Row="8" FontWeight="Bold">Case Number</TextBlock>
                 <TextBlock Grid.Row="12" FontWeight="Bold">Notes</TextBlock>
 
-                <TextBox Name="FldStartTime" Text="{Binding StartTimeField}" Grid.Row="2" BorderBrush="LightCoral" BorderThickness="1" TabIndex="0" />
-                <TextBox Name="FldEndTime" Text="{Binding EndTimeField}" Grid.Row="6" BorderBrush="LightCoral" BorderThickness="1" TabIndex="1"/>
-                <TextBox Name="FldCaseNumber" Text="{Binding CaseNumberField}" Grid.Row="10" BorderBrush="LightCoral" BorderThickness="1" TabIndex="2"/>
-                <TextBox Name="FldNotes" Text="{Binding NotesField}" Height="50" TextWrapping="Wrap" Grid.Row="14" BorderBrush="LightCoral" BorderThickness="1" TabIndex="3"/>
+                <TextBox Name="FldStartTime" Text="{Binding StartTimeField}" 
+                         Grid.Row="2" 
+                         BorderBrush="LightCoral" BorderThickness="1" 
+                         TabIndex="0" />
+                
+                <TextBox Name="FldEndTime" Text="{Binding EndTimeField}" 
+                         Grid.Row="6" 
+                         BorderBrush="LightCoral" BorderThickness="1" 
+                         TabIndex="1"/>
+                
+                <TextBox Name="FldCaseNumber" Text="{Binding CaseNumberField}" 
+                         Grid.Row="10" 
+                         BorderBrush="LightCoral" BorderThickness="1" 
+                         TabIndex="2"/>
+                
+                <TextBox Name="FldNotes" Text="{Binding NotesField}" 
+                         Grid.Row="14" 
+                         BorderBrush="LightCoral" BorderThickness="1" TextWrapping="Wrap" Height="50"
+                         TabIndex="3"/>
             </Grid>
 
             <Grid Margin="0,0,0,0" Grid.Row="2">
@@ -166,9 +189,6 @@
                         <ColumnDefinition Width="4"/>
                         <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
-
-                    <CheckBox Name="ChkOther" VerticalAlignment="Center" Checked="ChkOther_Checked" Unchecked="ChkOther_Unchecked"/>
-                    <TextBlock Grid.Column="2">Other</TextBlock>
                 </Grid>
 
                 <Button Grid.Column="0" Grid.Row="2" TabIndex="4"
@@ -190,13 +210,6 @@
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnInsert" ClickMode="Release">
                     Insert Record
-                </Button>
-
-                <Button Grid.Column="2" Grid.Row="4" TabIndex="7"
-                        Height="30" HorizontalAlignment="Stretch" 
-                        BorderBrush="Black" BorderThickness="1"
-                        Click="BtnUpdate" ClickMode="Release">
-                    Refresh UI
                 </Button>
             </Grid>
         </Grid>

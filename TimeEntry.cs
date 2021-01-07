@@ -7,6 +7,8 @@ using System.Windows.Data;
 
 namespace TimeTrack
 {
+    public delegate void TimeEntryChangedEventHandler();
+
     public class TimeEntry : INotifyPropertyChanged
     {
         public TimeEntry()
@@ -15,7 +17,7 @@ namespace TimeTrack
             end_time = null;
             case_number = "";
             notes = "";
-            ID = ID_index += 1;
+            ID = current_id_index += 1;
         }
         public TimeEntry(DateTime in_start, DateTime in_end)
         {
@@ -23,7 +25,7 @@ namespace TimeTrack
             end_time = in_end;
             case_number = "";
             notes = "";
-            ID = ID_index += 1;
+            ID = current_id_index += 1;
         }
         public TimeEntry(DateTime in_start, DateTime in_end, string in_case, string in_notes)
         {
@@ -31,17 +33,11 @@ namespace TimeTrack
             end_time = in_end;
             case_number = in_case;
             notes = in_notes;
-            ID = ID_index += 1;
+            ID = current_id_index += 1;
         }
-        
-        private static int ID_index;
 
-        private int id;
-        private DateTime? start_time;
-        private DateTime? end_time;
-        private string case_number;
-        private string notes;
-        private bool recorded;
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event TimeEntryChangedEventHandler TimeEntryChanged;
 
         public int ID
         {
@@ -51,19 +47,40 @@ namespace TimeTrack
         public DateTime? StartTime
         {
             get { return start_time; }
-            set { start_time = value; OnPropertyChanged(); }
+            set 
+            { 
+                start_time = value; 
+                OnPropertyChanged();
+                OnTimeEntryChanged();
+            }
         }
         public DateTime? EndTime
         {
             get { return end_time; }
-            set { end_time = value; OnPropertyChanged(); }
+            set 
+            { 
+                end_time = value; 
+                OnPropertyChanged();
+                OnTimeEntryChanged();
+            }
         }
         public string CaseNumber
         {
             get { return case_number; }
-            set { case_number = value; OnPropertyChanged(); }
+            set 
+            {
+                var old_val = case_number;
+                case_number = value; 
+                OnPropertyChanged(); 
+                // if the previous value was empty/null and is no longer, or visav-versa
+                if (((old_val == "" || old_val == null) && (case_number != "" || case_number != null)) || 
+                    ((old_val != "" || old_val != null) && (case_number == "" || case_number == null)))
+                {
+                    OnTimeEntryChanged();
+                }
+            }
         }
-        public string Notes 
+        public string Notes
         {
             get { return notes; }
             set { notes = value; OnPropertyChanged(); }
@@ -73,12 +90,23 @@ namespace TimeTrack
             get { return recorded; }
             set { recorded = value; OnPropertyChanged(); }
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
+        protected void OnTimeEntryChanged()
+        {
+            TimeEntryChanged?.Invoke();
+        }
+
+        private static int current_id_index;
+
+        private int id;
+        private DateTime? start_time;
+        private DateTime? end_time;
+        private string case_number;
+        private string notes;
+        private bool recorded;
     }
 
     public class TimeEntryUIConverter : IValueConverter
