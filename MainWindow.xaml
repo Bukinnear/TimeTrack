@@ -17,7 +17,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="1*" MinWidth="180" MaxWidth="150"/>
         </Grid.ColumnDefinitions>
 
@@ -29,13 +29,13 @@
             CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False" 
             BorderBrush="LightCoral" BorderThickness="1" 
             HorizontalGridLinesBrush="White" VerticalGridLinesBrush="White" AlternatingRowBackground="GhostWhite"
-            CellEditEnding="DgTimeRecords_CellEditEnding" SelectionChanged="DgTimeRecords_SelectionChanged">
+            SelectionChanged="DgTimeRecords_SelectionChanged">
 
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="" Width="30" Binding="{Binding Recorded}"/>
+                <DataGridCheckBoxColumn Header="" Width="30" Binding="{Binding Recorded, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="Start" Width="60" Binding="{Binding StartTime, Converter={StaticResource TimeEntryUIConverter}}"/>
                 <DataGridTextColumn Header="End" Width="60" Binding="{Binding EndTime, Converter={StaticResource TimeEntryUIConverter}}"/>
-                <DataGridTextColumn Header="Case" Width="85" Binding="{Binding CaseNumber}"/>
+                <DataGridTextColumn Header="Case" Width="87" Binding="{Binding CaseNumber}"/>
                 <DataGridTextColumn Header="Notes" MinWidth="160" Width="auto" Binding="{Binding Notes}"/>
             </DataGrid.Columns>
 
@@ -133,7 +133,7 @@
                 <TextBlock Grid.Row="0" FontWeight="Bold">Start Time</TextBlock>
                 <TextBlock Grid.Row="4" FontWeight="Bold">Finish Time</TextBlock>
                 <TextBlock Grid.Row="8" FontWeight="Bold">Case Number</TextBlock>
-                <TextBlock Grid.Row="12" FontWeight="Bold">Notes</TextBlock>
+                <TextBlock Grid.Row="12" FontWeight="Bold">Notes</TextBlock>                
 
                 <TextBox Name="FldStartTime" Text="{Binding StartTimeField}" 
                          Grid.Row="2" 
@@ -149,7 +149,7 @@
                          Grid.Row="10" 
                          BorderBrush="LightCoral" BorderThickness="1" 
                          TabIndex="2"/>
-                
+
                 <TextBox Name="FldNotes" Text="{Binding NotesField}" 
                          Grid.Row="14" 
                          BorderBrush="LightCoral" BorderThickness="1" TextWrapping="Wrap" Height="50"
@@ -191,25 +191,25 @@
                     </Grid.ColumnDefinitions>
                 </Grid>
 
-                <Button Grid.Column="0" Grid.Row="2" TabIndex="4"
+                <Button Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" TabIndex="4"
                         Height="30" HorizontalAlignment="Stretch" 
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnSubmit" ClickMode="Release">
                     Submit
                 </Button>
 
-                <Button Grid.Column="2" Grid.Row="2" TabIndex="5"
-                        Height="30" HorizontalAlignment="Stretch"
-                        BorderBrush="Black" BorderThickness="1"
-                        Click="BtnExport" ClickMode="Release">
-                    Export
-                </Button>
-
-                <Button Grid.Column="0" Grid.Row="4" TabIndex="6"
+                <Button Grid.Column="0" Grid.Row="4" TabIndex="4"
                         Height="30" HorizontalAlignment="Stretch"
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnInsert" ClickMode="Release">
                     Insert Record
+                </Button>
+
+                <Button Grid.Column="2" Grid.Row="4" TabIndex="6"
+                        Height="30" HorizontalAlignment="Stretch"
+                        BorderBrush="Black" BorderThickness="1"
+                        Click="BtnExport" ClickMode="Release">
+                    Export
                 </Button>
             </Grid>
         </Grid>

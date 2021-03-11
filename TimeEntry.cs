@@ -7,7 +7,7 @@ using System.Windows.Data;
 
 namespace TimeTrack
 {
-    public delegate void TimeEntryChangedEventHandler();
+    public delegate void TimeEntryChangedEventHandler(bool time_changed);
 
     public class TimeEntry : INotifyPropertyChanged
     {
@@ -35,10 +35,7 @@ namespace TimeTrack
             notes = in_notes;
             ID = current_id_index += 1;
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event TimeEntryChangedEventHandler TimeEntryChanged;
-
+                
         public int ID
         {
             get { return id; }
@@ -51,7 +48,7 @@ namespace TimeTrack
             { 
                 start_time = value; 
                 OnPropertyChanged();
-                OnTimeEntryChanged();
+                OnTimeEntryChanged(true);
             }
         }
         public DateTime? EndTime
@@ -61,7 +58,7 @@ namespace TimeTrack
             { 
                 end_time = value; 
                 OnPropertyChanged();
-                OnTimeEntryChanged();
+                OnTimeEntryChanged(true);
             }
         }
         public string CaseNumber
@@ -71,32 +68,37 @@ namespace TimeTrack
             {
                 var old_val = case_number;
                 case_number = value; 
-                OnPropertyChanged(); 
+                OnPropertyChanged();
+
                 // if the previous value was empty/null and is no longer, or visav-versa
-                if (((old_val == "" || old_val == null) && (case_number != "" || case_number != null)) || 
+                if (((old_val == "" || old_val == null) && (case_number != "" || case_number != null)) ||
                     ((old_val != "" || old_val != null) && (case_number == "" || case_number == null)))
-                {
-                    OnTimeEntryChanged();
-                }
+                    OnTimeEntryChanged(true);
+                else
+                    OnTimeEntryChanged(false);
             }
         }
         public string Notes
         {
             get { return notes; }
-            set { notes = value; OnPropertyChanged(); }
+            set { notes = value; OnPropertyChanged(); OnTimeEntryChanged(false); }
         }
         public bool Recorded
         {
             get { return recorded; }
-            set { recorded = value; OnPropertyChanged(); }
+            set { recorded = value; OnPropertyChanged(); OnTimeEntryChanged(false); }
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-        protected void OnTimeEntryChanged()
+
+        public event TimeEntryChangedEventHandler TimeEntryChanged;
+        protected void OnTimeEntryChanged(bool time_changed)
         {
-            TimeEntryChanged?.Invoke();
+            TimeEntryChanged?.Invoke(time_changed);
         }
 
         private static int current_id_index;

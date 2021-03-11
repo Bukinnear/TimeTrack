@@ -38,8 +38,8 @@ namespace TimeTrack
             InitializeComponent();
             time_keeper = DataContext as TimeKeeper;
 
-            //ImportFromCSV("DEBUG.csv");
-            ImportFromCSV(CSVName());
+            //time_keeper.ImportFromCSV("DEBUG.csv");
+            time_keeper.ImportFromCSV(time_keeper.CSVName);
 
             FldStartTime.Focus();
             time_keeper.UpdateSelectedTime();
@@ -55,7 +55,7 @@ namespace TimeTrack
                 DgTimeRecords.SelectedIndex = time_keeper.Entries.Count - 1;
                 DgTimeRecords.ScrollIntoView(time_keeper.Entries.Last());
                 DgTimeRecords.Focus();
-                ExportToCSV(CSVName());
+                time_keeper.ExportToCSV(time_keeper.CSVName);
             }
         }
 
@@ -68,7 +68,7 @@ namespace TimeTrack
                 DgTimeRecords.SelectedIndex = DgTimeRecords.SelectedIndex - 1;
                 DgTimeRecords.ScrollIntoView(insert);
                 DgTimeRecords.Focus();
-                ExportToCSV(CSVName());
+                time_keeper.ExportToCSV(time_keeper.CSVName);
             }
         }
 
@@ -122,48 +122,6 @@ namespace TimeTrack
             FldNotes.IsEnabled = true;
             FldNotes.Background = Brushes.White;
         }
-                        
-        private string CSVName()
-        {
-            return "TimeTrack_" + time_keeper.Today.ToString("yyyy-MM-dd") + ".csv";
-        }
-
-        public void ExportToCSV(string file)
-        {
-            try
-            {
-                using (var writer = new StreamWriter(file))
-                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-                {
-                    csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
-                    csv.WriteRecords(time_keeper.Entries);
-                }
-            }
-            catch(Exception) { }
-        }
-
-        public void ImportFromCSV(string file)
-        {
-            try
-            {
-                if (File.Exists(file))
-                {
-                    using (var reader = new StreamReader(file))
-                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                    {
-                        csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
-                        foreach (var i in csv.GetRecords<TimeEntry>())
-                            time_keeper.AddEntry(i);
-                    }
-                }
-            }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }
-        }
-
-        private void DgTimeRecords_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
-        {
-            ExportToCSV(CSVName());
-        }
 
         private void DgTimeRecords_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -183,6 +141,7 @@ namespace TimeTrack
         // Accessor functions
 
         public DateTime Today { get => today; }
+        public string CSVName => "TimeTrack_" + Today.ToString("yyyy-MM-dd") + ".csv";
 
         public ObservableCollection<TimeEntry> Entries
         {
@@ -291,9 +250,9 @@ namespace TimeTrack
         public void RemoveCurrentlySelectedEntry()
         {
             Entries.Remove(SelectedItem);
-            HandleTimeEntryChanged();
+            HandleTimeEntryChanged(true);
             SelectLastEntry();
-            //UpdateSelectedTime();
+            ExportToCSV(CSVName);
         }
 
         public void SelectLastEntry()
@@ -302,6 +261,38 @@ namespace TimeTrack
                 SelectedItem = Entries.Last();
             else
                 UpdateSelectedTime();
+        }
+
+        public void ExportToCSV(string file)
+        {
+            try
+            {
+                using (var writer = new StreamWriter(file))
+                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                {
+                    csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
+                    csv.WriteRecords(Entries);
+                }
+            }
+            catch (Exception) { }
+        }
+
+        public void ImportFromCSV(string file)
+        {
+            try
+            {
+                if (File.Exists(file))
+                {
+                    using (var reader = new StreamReader(file))
+                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                    {
+                        csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
+                        foreach (var i in csv.GetRecords<TimeEntry>())
+                            AddEntry(i);
+                    }
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
         public void ClearFieldsAndSetStartTime()
@@ -371,10 +362,15 @@ namespace TimeTrack
                 StartTimeField = null;
         }
 
-        public void HandleTimeEntryChanged()
+        public void HandleTimeEntryChanged(bool time_changed)
         {
-            UpdateTimeTotals();
-            SetStartTimeField();
+            if (time_changed)
+            {
+                UpdateTimeTotals();
+                UpdateSelectedTime();
+                SetStartTimeField();
+            }
+            ExportToCSV(CSVName);
         }
 
         private ICommand remove_command;
@@ -385,6 +381,17 @@ namespace TimeTrack
                 if (remove_command == null)
                     remove_command = new RelayCommand(p => RemoveCurrentlySelectedEntry());
                 return remove_command;
+            }
+        }
+
+        private ICommand submit_command;
+        public ICommand SubmitCommand
+        {
+            get
+            {
+                if (submit_command == null)
+                    submit_command = new RelayCommand(p => SubmitEntry());
+                return submit_command;
             }
         }
 
@@ -440,7 +447,7 @@ namespace TimeTrack
             /* Regex:
              * Start of the string
              * 2 digits
-             * either ; or : - optional
+             * either ;, : or . - optional
              * 2 digits - optional
              * case insensitive
              * any number of whitespaces
@@ -448,7 +455,7 @@ namespace TimeTrack
              * PM - optional
              * end of the string
              */
-            string valid_24hour_format = @"^\d{2}[;:]?(\d{2})?(?i:(\s?)+(?!AM)(PM)?)?$";
+            string valid_24hour_format = @"^\d{2}[;:.]?(\d{2})?(?i:(\s?)+(?!AM)(PM)?)?$";
 
             if (Regex.IsMatch(value, valid_time_format))
             {
