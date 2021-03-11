@@ -433,7 +433,7 @@ namespace TimeTrack
             /* Regex Explantion:
              * ^                : starting at the beginning of the string
              * \d{1,2}          : between 1, and 2 digit characters
-             * [;:]?            : either ; or : - optional
+             * [;:.]?           : ";", ":", or "." - optional
              * ()               : encapsulated logic. The same as you are used to.
              * (\d{2})?         : exactly 2 digit characters - option
              * (\s?)+           : any number of whitespaces - optional
@@ -442,7 +442,7 @@ namespace TimeTrack
              * ...[AP]M)?      : either A, or P characters, followed by M. All optional
              * $                : the end of the string
              */
-            string valid_time_format = @"^\d{1,2}[;:]?(\d{2})?((\s?)+(?i:[AP]M)?)?$";
+            string valid_time_format = @"^\d{1,2}[;:.]?(\d{2})?((\s?)+(?i:[AP]M)?)?$";
 
             /* Regex:
              * Start of the string
@@ -499,6 +499,7 @@ namespace TimeTrack
         {
             value = value.Trim();
             value = value.Replace(";", ":");
+            value = value.Replace(".", ":");
             value = value.Replace(" ", "");
 
             bool period_present = TimePeriodPresent(value);
