@@ -39,7 +39,7 @@ namespace TimeTrack
             time_keeper = DataContext as TimeKeeper;
 
             //time_keeper.ImportFromCSV("DEBUG.csv");
-            time_keeper.ImportFromCSV(time_keeper.CSVName);
+            ImportExportHandler.Import(time_keeper.Entries);
 
             FldStartTime.Focus();
             time_keeper.UpdateSelectedTime();
@@ -55,7 +55,7 @@ namespace TimeTrack
                 DgTimeRecords.SelectedIndex = time_keeper.Entries.Count - 1;
                 DgTimeRecords.ScrollIntoView(time_keeper.Entries.Last());
                 DgTimeRecords.Focus();
-                time_keeper.ExportToCSV(time_keeper.CSVName);
+                ImportExportHandler.Export(time_keeper.Entries);
             }
         }
 
@@ -68,7 +68,7 @@ namespace TimeTrack
                 DgTimeRecords.SelectedIndex = DgTimeRecords.SelectedIndex - 1;
                 DgTimeRecords.ScrollIntoView(insert);
                 DgTimeRecords.Focus();
-                time_keeper.ExportToCSV(time_keeper.CSVName);
+                ImportExportHandler.Export(time_keeper.Entries);
             }
         }
 
@@ -252,7 +252,7 @@ namespace TimeTrack
             Entries.Remove(SelectedItem);
             HandleTimeEntryChanged(true);
             SelectLastEntry();
-            ExportToCSV(CSVName);
+            ImportExportHandler.Export(time_records);
         }
 
         public void SelectLastEntry()
@@ -262,39 +262,7 @@ namespace TimeTrack
             else
                 UpdateSelectedTime();
         }
-
-        public void ExportToCSV(string file)
-        {
-            try
-            {
-                using (var writer = new StreamWriter(file))
-                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-                {
-                    csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
-                    csv.WriteRecords(Entries);
-                }
-            }
-            catch (Exception) { }
-        }
-
-        public void ImportFromCSV(string file)
-        {
-            try
-            {
-                if (File.Exists(file))
-                {
-                    using (var reader = new StreamReader(file))
-                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                    {
-                        csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
-                        foreach (var i in csv.GetRecords<TimeEntry>())
-                            AddEntry(i);
-                    }
-                }
-            }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }
-        }
-
+        
         public void ClearFieldsAndSetStartTime()
         {
             SetStartTimeField();
@@ -370,7 +338,7 @@ namespace TimeTrack
                 UpdateSelectedTime();
                 SetStartTimeField();
             }
-            ExportToCSV(CSVName);
+            ImportExportHandler.Export(time_records);
         }
 
         private ICommand remove_command;
@@ -417,6 +385,60 @@ namespace TimeTrack
         private string selected_hours;
         private string selected_mins;
         private TimeEntry selected_item;
+    }
+
+    class ImportExportHandler
+    {
+        private static string saveFilepathYear = DateTime.Today.ToString("yyyy");
+        private static string saveFilepathMonth = System.IO.Path.Combine(saveFilepathYear, DateTime.Today.ToString("MM"));
+        private static string saveFileName = "TimeTrack_" + DateTime.Today.ToString("yyyy-MM-dd") + ".csv";
+        private static string fullSaveFilePath = System.IO.Path.Combine(saveFilepathMonth, saveFileName);
+
+        public static void Export(ObservableCollection<TimeEntry> entries)
+        {
+            CreateDirectoryStructure();
+
+            try
+            {
+                using (var writer = new StreamWriter(fullSaveFilePath))
+                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                {
+                    csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
+                    csv.WriteRecords(entries);
+                }
+            }
+            catch (Exception) { }
+        }    
+
+        public static void Import(ObservableCollection<TimeEntry> entries)
+        {
+            try
+            {
+                if (File.Exists(fullSaveFilePath))
+                {
+                    using (var reader = new StreamReader(fullSaveFilePath))
+                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                    {
+                        csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
+                        foreach (var entry in csv.GetRecords<TimeEntry>())
+                            entries.Add(entry);
+                    }
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+        }
+
+        private static void CreateDirectoryStructure()
+        {
+            if (!File.Exists(fullSaveFilePath))
+            {
+                if (!Directory.Exists(saveFilepathYear))
+                    Directory.CreateDirectory(saveFilepathYear);
+
+                if (!Directory.Exists(saveFilepathMonth))
+                    Directory.CreateDirectory(saveFilepathMonth);
+            }
+        }
     }
 
     public static class TimeStringConverter
