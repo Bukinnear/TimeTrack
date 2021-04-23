@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TimeTrack"
         mc:Ignorable="d"
-        Title="Time Track" Height="530" Width="600" Icon="time2.png">
+        Title="Time Track" Height="530" Width ="605" MinWidth="600" Icon="time2.png">
 
     <Window.DataContext>
         <local:TimeKeeper/>
@@ -36,7 +36,7 @@
                 <DataGridTextColumn Header="Start" Width="60" Binding="{Binding StartTime, Converter={StaticResource TimeEntryUIConverter}}"/>
                 <DataGridTextColumn Header="End" Width="60" Binding="{Binding EndTime, Converter={StaticResource TimeEntryUIConverter}}"/>
                 <DataGridTextColumn Header="Case" Width="87" Binding="{Binding CaseNumber}"/>
-                <DataGridTextColumn Header="Notes" MinWidth="160" Width="auto" Binding="{Binding Notes}"/>
+                <DataGridTextColumn Header="Notes" Width="138" Binding="{Binding Notes}"/>
             </DataGrid.Columns>
 
             <DataGrid.InputBindings>
