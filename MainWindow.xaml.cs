@@ -202,13 +202,6 @@ namespace TimeTrack
             UpdateTimeTotals();
         }
 
-        public void AddEntry(TimeEntry entry)
-        {
-            entry.TimeEntryChanged += HandleTimeEntryChanged;
-            time_records.Add(entry);
-            UpdateTimeTotals();
-        }
-
         public bool InsertEntry(int index, DateTime start_time, DateTime end_time, string case_number = "", string notes = "")
         {
             if (index <= time_records.Count)
