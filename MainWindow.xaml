@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TimeTrack"
         mc:Ignorable="d"
-        Title="Time Track" Height="530" Width ="605" MinWidth="600" Icon="time2.png">
+        Title="Time Track" Height="530" Width ="605" MinWidth="600" Icon="time2.png" SizeToContent="Width">
 
     <Window.DataContext>
         <local:TimeKeeper/>
@@ -21,6 +21,7 @@
             <ColumnDefinition Width="1*" MinWidth="180" MaxWidth="150"/>
         </Grid.ColumnDefinitions>
 
+        <!--Entries Window-->
         <DataGrid 
             Name="DgTimeRecords" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedItem}"
             AutoGenerateColumns="False"  Grid.Column="0" Margin="12,12,12,12" 
@@ -44,6 +45,7 @@
             </DataGrid.InputBindings>
         </DataGrid>
 
+        <!--Right Column-->
         <Grid Grid.Column="1" Margin="0, 12, 12, 12">
 
             <Grid.RowDefinitions>
@@ -62,6 +64,7 @@
                     <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
 
+                <!--Hours/gaps-->
                 <Grid Grid.Row="0" Margin="0, 0, 0, 0" HorizontalAlignment="Stretch">
 
                     <Grid.ColumnDefinitions>
@@ -87,6 +90,7 @@
                     <TextBlock Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" TextAlignment="Center" Text="{Binding GapsTotal}"/>
                 </Grid>
 
+                <!--Selected Time-->
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*"/>
@@ -109,6 +113,7 @@
 
             </Grid>
 
+            <!--Input Fields-->
             <Grid Margin="0,12,0,0" Grid.Row="1">
 
                 <Grid.RowDefinitions>
@@ -138,24 +143,29 @@
                 <TextBox Name="FldStartTime" Text="{Binding StartTimeField}" 
                          Grid.Row="2" 
                          BorderBrush="LightCoral" BorderThickness="1" 
-                         TabIndex="0" />
+                         TabIndex="0"
+                         PreviewKeyDown="OnKeyDown"/>
                 
                 <TextBox Name="FldEndTime" Text="{Binding EndTimeField}" 
                          Grid.Row="6" 
                          BorderBrush="LightCoral" BorderThickness="1" 
-                         TabIndex="1"/>
+                         TabIndex="1"
+                         PreviewKeyDown="OnKeyDown"/>
                 
                 <TextBox Name="FldCaseNumber" Text="{Binding CaseNumberField}" 
                          Grid.Row="10" 
                          BorderBrush="LightCoral" BorderThickness="1" 
-                         TabIndex="2"/>
+                         TabIndex="2"
+                         PreviewKeyDown="OnKeyDown"/>
 
                 <TextBox Name="FldNotes" Text="{Binding NotesField}" 
                          Grid.Row="14" 
                          BorderBrush="LightCoral" BorderThickness="1" TextWrapping="Wrap" Height="50"
-                         TabIndex="3"/>
+                         TabIndex="3"
+                         PreviewKeyDown="OnKeyDown"/>
             </Grid>
 
+            <!--Buttons & checkbox-->
             <Grid Margin="0,0,0,0" Grid.Row="2">
 
                 <Grid.ColumnDefinitions>

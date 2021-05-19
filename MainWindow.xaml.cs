@@ -29,6 +29,7 @@ using System.Runtime.InteropServices;
 
 namespace TimeTrack
 {
+    
     public partial class MainWindow : Window
     {
         private TimeKeeper time_keeper;
@@ -38,15 +39,23 @@ namespace TimeTrack
             InitializeComponent();
             time_keeper = DataContext as TimeKeeper;
 
-            //time_keeper.ImportFromCSV("DEBUG.csv");
-            ImportExportHandler.Import(time_keeper.Entries);
+            ImportEntries();            
 
             FldStartTime.Focus();
             time_keeper.UpdateSelectedTime();
             time_keeper.SetStartTimeField();
         }
 
-        private void BtnSubmit(object sender, RoutedEventArgs e)
+        private void ImportEntries()
+        {
+            //time_keeper.ImportFromCSV("DEBUG.csv");
+            ImportExportHandler.Import(time_keeper.Entries);
+
+            if (time_keeper.Entries.Count > 0)
+                time_keeper.Today = ((DateTime)time_keeper.Entries[0].StartTime).Date;
+        }
+
+        private void Submit()
         {
             if (time_keeper.SubmitEntry())
             {
@@ -57,6 +66,11 @@ namespace TimeTrack
                 DgTimeRecords.Focus();
                 ImportExportHandler.Export(time_keeper.Entries);
             }
+        }
+
+        private void BtnSubmit(object sender, RoutedEventArgs e)
+        {
+            Submit();
         }
 
         private void BtnInsert(object sender, RoutedEventArgs e)
@@ -110,6 +124,16 @@ namespace TimeTrack
             time_keeper.NotesField = "Lunch";
             FldNotes.IsEnabled = false;
             FldNotes.Background = Brushes.LightGray;
+
+            if (time_keeper.EndTimeField == null)
+            {
+                var EndLunch = TimeStringConverter.StringToDateTime(time_keeper.StartTimeField);
+                if (EndLunch != null)
+                {
+                    EndLunch = ((DateTime)EndLunch).AddHours(1);
+                    time_keeper.EndTimeField = ((DateTime)EndLunch).ToShortTimeString();
+                }
+            }
         }
 
         private void ChkLunch_Unchecked(object sender, RoutedEventArgs e)
@@ -118,6 +142,7 @@ namespace TimeTrack
             FldCaseNumber.IsEnabled = true;
             FldCaseNumber.Background = Brushes.White;
 
+            time_keeper.EndTimeField = null;
             time_keeper.NotesField = null;
             FldNotes.IsEnabled = true;
             FldNotes.Background = Brushes.White;
@@ -128,6 +153,14 @@ namespace TimeTrack
             if (DgTimeRecords.SelectedItem != null)
                 time_keeper.UpdateSelectedTime();
         }
+
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                Submit();
+            }
+        }
     }
 
     public class TimeKeeper : INotifyPropertyChanged
@@ -135,12 +168,13 @@ namespace TimeTrack
         public TimeKeeper()
         {
             time_records = new ObservableCollection<TimeEntry>();
+            
             today = DateTime.Today;
         }
 
         // Accessor functions
 
-        public DateTime Today { get => today; }
+        public DateTime Today { get => today; set => today = value; }
         public string CSVName => "TimeTrack_" + Today.ToString("yyyy-MM-dd") + ".csv";
 
         public ObservableCollection<TimeEntry> Entries
