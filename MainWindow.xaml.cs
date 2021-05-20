@@ -125,7 +125,7 @@ namespace TimeTrack
             FldNotes.IsEnabled = false;
             FldNotes.Background = Brushes.LightGray;
 
-            if (time_keeper.EndTimeField == null)
+            if (time_keeper.EndTimeField == null || time_keeper.EndTimeField == "")
             {
                 var EndLunch = TimeStringConverter.StringToDateTime(time_keeper.StartTimeField);
                 if (EndLunch != null)
