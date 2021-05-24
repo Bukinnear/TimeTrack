@@ -15,6 +15,10 @@
         <local:TimeEntryUIConverter x:Key="TimeEntryUIConverter"/>
     </Window.Resources>
 
+    <Window.InputBindings>
+        <!--<KeyBinding Key="Insert" Command="{Binding SubmitCommand}" />-->
+    </Window.InputBindings>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*"/>
@@ -39,7 +43,7 @@
                 <DataGridTextColumn Header="Case" Width="87" Binding="{Binding CaseNumber}"/>
                 <DataGridTextColumn Header="Notes" Width="138" Binding="{Binding Notes}"/>
             </DataGrid.Columns>
-
+            
             <DataGrid.InputBindings>
                 <KeyBinding Key="Delete" Command="{Binding RemoveCommand}" />
             </DataGrid.InputBindings>

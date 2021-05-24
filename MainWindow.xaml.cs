@@ -29,7 +29,7 @@ using System.Runtime.InteropServices;
 
 namespace TimeTrack
 {
-    
+
     public partial class MainWindow : Window
     {
         private TimeKeeper time_keeper;
@@ -39,7 +39,7 @@ namespace TimeTrack
             InitializeComponent();
             time_keeper = DataContext as TimeKeeper;
 
-            ImportEntries();            
+            ImportEntries();
 
             FldStartTime.Focus();
             time_keeper.UpdateSelectedTime();
@@ -91,7 +91,7 @@ namespace TimeTrack
             if (DgTimeRecords.SelectedItem != null)
             {
                 TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
-                string text = ((DateTime)selected.StartTime).ToShortTimeString() + " - " + 
+                string text = ((DateTime)selected.StartTime).ToShortTimeString() + " - " +
                     ((DateTime)selected.EndTime).ToShortTimeString() + "\n" + selected.Notes;
                 Clipboard.SetText(text);
                 selected.Recorded = true;
@@ -378,16 +378,12 @@ namespace TimeTrack
                 return remove_command;
             }
         }
-
+        
         private ICommand submit_command;
         public ICommand SubmitCommand
         {
-            get
-            {
-                if (submit_command == null)
-                    submit_command = new RelayCommand(p => SubmitEntry());
-                return submit_command;
-            }
+            get => submit_command;
+            set => submit_command = value;
         }
 
         // Inheritance items
@@ -668,5 +664,26 @@ namespace TimeTrack
         {
             this.execute(parameter);
         }
+    }
+
+    public class HotkeyDelegateCommand : ICommand
+    {
+        // Specify the keys and mouse actions that invoke the command. 
+        public Key HotKey { get; set; }
+
+        Action<object> _executeDelegate;
+
+        public HotkeyDelegateCommand(Action<object> executeDelegate)
+        {
+            _executeDelegate = executeDelegate;
+        }
+
+        public void Execute(object parameter)
+        {
+            _executeDelegate(parameter);
+        }
+
+        public bool CanExecute(object parameter) { return true; }
+        public event EventHandler CanExecuteChanged;
     }
 }
