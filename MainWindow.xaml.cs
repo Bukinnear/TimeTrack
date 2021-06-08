@@ -93,8 +93,12 @@ namespace TimeTrack
                 TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
                 string text = ((DateTime)selected.StartTime).ToShortTimeString() + " - " +
                     ((DateTime)selected.EndTime).ToShortTimeString() + "\n" + selected.Notes;
-                Clipboard.SetText(text);
-                selected.Recorded = true;
+                try
+                {
+                    Clipboard.SetData(DataFormats.Text, text);
+                    selected.Recorded = true;
+                }
+                catch { }
             }
         }
 
