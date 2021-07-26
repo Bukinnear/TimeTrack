@@ -24,4 +24,4 @@ Exporting
 "x:xx AM - x:xx PM
 Discription text here"
 
-![Screenshot](/screenshot.jpg?raw=true)
+![Screenshot](/Resources/Screenshot.png?raw=true)
