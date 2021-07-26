@@ -2,7 +2,8 @@ TimeTrack is an application to help manage my timesheets.
 
 The tools provided in our latest system made it difficult to know where my time was going, so I made this to assist.
 
-Features:
+Features:  
+
 Time Entry
 - Accept a time start, end, case/reference number, and a description. 
 - Time entries will default to working hours (7AM - 7PM) with AM being the preference, if ambiguous
@@ -21,7 +22,8 @@ Statistics
 
 Exporting
 - The export button will copy the currently selected time record to the clipboard, in the format of:
-"x:xx AM - x:xx PM
+
+"x:xx AM - x:xx PM  
 Discription text here"
 
 ![Screenshot](/Resources/Screenshot.png?raw=true)
