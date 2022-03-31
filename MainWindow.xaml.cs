@@ -44,6 +44,7 @@ namespace TimeTrack
             FldStartTime.Focus();
             time_keeper.UpdateSelectedTime();
             time_keeper.SetStartTimeField();
+            time_keeper.UpdateTimeTotals();
         }
 
         private void ImportEntries()
@@ -63,7 +64,7 @@ namespace TimeTrack
                 ChkLunch.IsChecked = false;
                 DgTimeRecords.SelectedIndex = time_keeper.Entries.Count - 1;
                 DgTimeRecords.ScrollIntoView(time_keeper.Entries.Last());
-                DgTimeRecords.Focus();
+                FldEndTime.Focus();
                 ImportExportHandler.Export(time_keeper.Entries);
             }
         }
@@ -91,14 +92,38 @@ namespace TimeTrack
             if (DgTimeRecords.SelectedItem != null)
             {
                 TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
-                string text = ((DateTime)selected.StartTime).ToShortTimeString() + " - " +
-                    ((DateTime)selected.EndTime).ToShortTimeString() + "\n" + selected.Notes;
+                string text = selected.StartTimeAsShortString() + " - " + selected.EndTimeAsShortString() + "\n" + selected.Notes;
                 try
                 {
                     Clipboard.SetData(DataFormats.Text, text);
                     selected.Recorded = true;
                 }
                 catch { }
+            }
+        }
+
+        private void BtnExportAll(object sender, RoutedEventArgs e)
+        {
+            if (!DgTimeRecords.Items.IsEmpty)
+            {
+                string path = "C:\\temp\\_time_export.csv";
+                if (File.Exists(path))
+                    File.Delete(path);
+
+                string[] output = new string[DgTimeRecords.Items.Count];
+                var all_records = DgTimeRecords.Items;
+
+                for (int i = 0; i < all_records.Count; i++)
+                {
+                    TimeEntry entry = all_records[i] as TimeEntry;
+                    string case_number = entry.CaseNumber != null && entry.CaseNumber != "" ? entry.CaseNumber.ToString().Trim() : "nil";
+                    string hours = entry.Hours().ToString();
+                    string minutes = entry.Minutes().ToString();
+                    string time_period = entry.StartTimeAsShortString() + " - " + entry.EndTimeAsShortString();
+
+                    output[i] = case_number + "," + hours + "," + minutes + "," + time_period + "," + entry.Notes;
+                }
+                File.WriteAllLines(path, output);
             }
         }
 
@@ -162,6 +187,7 @@ namespace TimeTrack
         {
             if (e.Key == Key.Enter)
             {
+                BtnSub.Focus();
                 Submit();
             }
         }

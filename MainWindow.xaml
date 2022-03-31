@@ -205,14 +205,14 @@
                     </Grid.ColumnDefinitions>
                 </Grid>
 
-                <Button Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" TabIndex="4"
+                <Button Name="BtnSub" Grid.Column="2" Grid.Row="2" Grid.ColumnSpan="1" TabIndex="4"
                         Height="30" HorizontalAlignment="Stretch" 
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnSubmit" ClickMode="Release">
                     Submit
                 </Button>
 
-                <Button Grid.Column="0" Grid.Row="4" TabIndex="4"
+                <Button Grid.Column="0" Grid.Row="2" TabIndex="5"
                         Height="30" HorizontalAlignment="Stretch"
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnInsert" ClickMode="Release">
@@ -224,6 +224,13 @@
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnExport" ClickMode="Release">
                     Export
+                </Button>
+
+                <Button Grid.Column="0" Grid.Row="4" TabIndex="6"
+                        Height="30" HorizontalAlignment="Stretch"
+                        BorderBrush="Black" BorderThickness="1"
+                        Click="BtnExportAll" ClickMode="Release">
+                    Export All
                 </Button>
             </Grid>
         </Grid>

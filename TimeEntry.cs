@@ -89,6 +89,32 @@ namespace TimeTrack
             set { recorded = value; OnPropertyChanged(); OnTimeEntryChanged(false); }
         }
 
+        public string StartTimeAsShortString()
+        {
+            if (start_time == null)
+                return "";
+            return ((DateTime)start_time).ToShortTimeString();
+        }
+        public string EndTimeAsShortString()
+        {
+            if (end_time == null)
+                return "";
+            return ((DateTime)end_time).ToShortTimeString();
+            
+        }
+        public int Hours()
+        {
+            if (start_time == null || end_time == null)
+                return 0;
+            return (((DateTime)end_time) - ((DateTime)start_time)).Hours;
+        }
+        public int Minutes()
+        {
+            if (start_time == null || end_time == null)
+                return 0;
+            return (((DateTime)end_time) - ((DateTime)start_time)).Minutes;
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
