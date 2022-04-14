@@ -89,59 +89,63 @@ namespace TimeTrack
 
         private void BtnExport(object sender, RoutedEventArgs e)
         {
-            if (DgTimeRecords.SelectedItem != null)
+            if (DgTimeRecords.SelectedItem == null)
+                return;
+
+            TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
+            string text = selected.StartTimeAsShortString() + " - " + selected.EndTimeAsShortString() + "\n" + selected.Notes;
+
+            bool retry;
+            int retry_count = 0;
+            int max_retries = 20;
+
+            do
             {
-                TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
-                string text = selected.StartTimeAsShortString() + " - " + selected.EndTimeAsShortString() + "\n" + selected.Notes;
+                retry = false;
                 try
                 {
                     Clipboard.SetData(DataFormats.Text, text);
                     selected.Recorded = true;
                 }
-                catch { }
-            }
+                catch
+                {
+                    retry = true;
+                    retry_count++;
+                }
+            } while (retry && retry_count < max_retries);
         }
 
         private void BtnExportAll(object sender, RoutedEventArgs e)
         {
-            if (!DgTimeRecords.Items.IsEmpty)
+            if (DgTimeRecords.Items.IsEmpty)
+                return;
+
+            string path = "C:\\temp\\_time_export.csv";
+            if (File.Exists(path))
+                File.Delete(path);
+
+            string[] output = new string[DgTimeRecords.Items.Count];
+            var all_records = DgTimeRecords.Items;
+
+            for (int i = 0; i < all_records.Count; i++)
             {
-                string path = "C:\\temp\\_time_export.csv";
-                if (File.Exists(path))
-                    File.Delete(path);
+                TimeEntry entry = all_records[i] as TimeEntry;
 
-                string[] output = new string[DgTimeRecords.Items.Count];
-                var all_records = DgTimeRecords.Items;
+                if (entry.Recorded)
+                    continue;
 
-                for (int i = 0; i < all_records.Count; i++)
-                {
-                    TimeEntry entry = all_records[i] as TimeEntry;
-                    string case_number = entry.CaseNumber != null && entry.CaseNumber != "" ? entry.CaseNumber.ToString().Trim() : "nil";
-                    string hours = entry.Hours().ToString();
-                    string minutes = entry.Minutes().ToString();
-                    string time_period = entry.StartTimeAsShortString() + " - " + entry.EndTimeAsShortString();
+                string case_number = entry.CaseNumber != null && entry.CaseNumber != "" ? entry.CaseNumber.ToString().Trim() : "nil";
+                string hours = entry.Hours().ToString();
+                string minutes = entry.Minutes().ToString();
+                string time_period = entry.StartTimeAsShortString() + " - " + entry.EndTimeAsShortString();
 
-                    output[i] = case_number + "," + hours + "," + minutes + "," + time_period + "," + entry.Notes;
-                }
-                File.WriteAllLines(path, output);
+                output[i] = case_number + "," + hours + "," + minutes + "," + time_period + "," + entry.Notes;
             }
-        }
+            File.WriteAllLines(path, output);
 
-        private void BtnMoveUp(object sender, RoutedEventArgs e)
-        {
-            /*
-            if (DgTimeRecords.SelectedIndex > 0)
-                time_records.Move(DgTimeRecords.SelectedIndex, DgTimeRecords.SelectedIndex - 1);
-            */
-            DgTimeRecords.Focus();
-        }
+            foreach (var i in DgTimeRecords.Items)
+                (i as TimeEntry).Recorded = true;
 
-        private void BtnMoveDown(object sender, RoutedEventArgs e)
-        {/*
-            if (DgTimeRecords.SelectedIndex >= 0 && DgTimeRecords.SelectedIndex != time_records.Count - 1)
-                time_records.Move(DgTimeRecords.SelectedIndex, DgTimeRecords.SelectedIndex + 1);
-            */
-            DgTimeRecords.Focus();
         }
 
         private void ChkLunch_Checked(object sender, RoutedEventArgs e)
