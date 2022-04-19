@@ -97,22 +97,46 @@ namespace TimeTrack
 
             bool retry;
             int retry_count = 0;
-            int max_retries = 20;
+            int max_retries = 30;
 
             do
             {
                 retry = false;
                 try
                 {
-                    Clipboard.SetData(DataFormats.Text, text);
-                    selected.Recorded = true;
+                    Clipboard.SetData(DataFormats.UnicodeText, text);
                 }
                 catch
                 {
-                    retry = true;
-                    retry_count++;
+                    try
+                    {
+                        if (!Clipboard.ContainsText(TextDataFormat.UnicodeText))
+                        {
+                            retry = true;
+                            retry_count++;
+                            continue;
+                        }
+
+                        var clipboard_contents = Clipboard.GetText(TextDataFormat.UnicodeText);
+                        if (!(clipboard_contents == text))
+                        {
+                            retry = true;
+                            retry_count++;
+                        }
+                    }
+                    catch
+                    {
+                        retry = true;
+                        retry_count++;
+                    }
                 }
             } while (retry && retry_count < max_retries);
+
+            if (!retry)
+            {
+                selected.Recorded = true;
+                ImportExportHandler.Export(time_keeper.Entries);
+            }
         }
 
         private void BtnExportAll(object sender, RoutedEventArgs e)
@@ -145,6 +169,8 @@ namespace TimeTrack
 
             foreach (var i in DgTimeRecords.Items)
                 (i as TimeEntry).Recorded = true;
+
+            ImportExportHandler.Export(time_keeper.Entries);
 
         }
 
