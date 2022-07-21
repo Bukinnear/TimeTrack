@@ -174,6 +174,34 @@ namespace TimeTrack
 
         }
 
+        private void BtnToggleStatus(object sender, RoutedEventArgs e)
+        {
+            if (DgTimeRecords.SelectedItem == null)
+                return;
+
+            bool new_status = true;
+
+            foreach (var i in DgTimeRecords.SelectedItems)
+            {
+                if (i.GetType().ToString() != "TimeTrack.TimeEntry")
+                    continue;
+
+                if (((TimeEntry)i).Recorded == true)
+                {
+                    new_status = false;
+                    break;
+                }
+            }
+
+            foreach (var i in DgTimeRecords.SelectedItems)
+                {
+                    if (i.GetType().ToString() != "TimeTrack.TimeEntry")
+                        continue;
+
+                ((TimeEntry)i).Recorded = new_status;
+            }            
+        }
+
         private void ChkLunch_Checked(object sender, RoutedEventArgs e)
         {
             time_keeper.CaseNumberField = null;

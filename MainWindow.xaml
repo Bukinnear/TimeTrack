@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TimeTrack"
         mc:Ignorable="d"
-        Title="Time Track" Height="530" Width ="605" MinWidth="600" Icon="time2.png" SizeToContent="Width">
+        Title="Time Track" Height="551" Width ="605" MinWidth="600" Icon="time2.png" SizeToContent="Width">
 
     <Window.DataContext>
         <local:TimeKeeper/>
@@ -184,6 +184,8 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="4"/>
                     <RowDefinition Height="auto"/>
+                    <RowDefinition Height="4"/>
+                    <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Column="0" HorizontalAlignment="Center">
@@ -193,7 +195,10 @@
                         <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <CheckBox Name="ChkLunch" VerticalAlignment="Center" Checked="ChkLunch_Checked" Unchecked="ChkLunch_Unchecked" DataContext="null"/>
+                    <CheckBox Name="ChkLunch"
+                              VerticalAlignment="Center" HorizontalAlignment="Center"
+                              Checked="ChkLunch_Checked" Unchecked="ChkLunch_Unchecked" 
+                              DataContext="null"/>
                     <TextBlock Grid.Column="2">Lunch</TextBlock>
                 </Grid>
 
@@ -205,32 +210,39 @@
                     </Grid.ColumnDefinitions>
                 </Grid>
 
-                <Button Name="BtnSub" Grid.Column="2" Grid.Row="2" Grid.ColumnSpan="1" TabIndex="4"
+                <Button Name="BtnSub" Grid.Row="2" Grid.ColumnSpan="3" TabIndex="4"
                         Height="30" HorizontalAlignment="Stretch" 
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnSubmit" ClickMode="Release">
                     Submit
                 </Button>
 
-                <Button Grid.Column="0" Grid.Row="2" TabIndex="5"
-                        Height="30" HorizontalAlignment="Stretch"
-                        BorderBrush="Black" BorderThickness="1"
-                        Click="BtnInsert" ClickMode="Release">
-                    Insert Record
-                </Button>
-
-                <Button Grid.Column="2" Grid.Row="4" TabIndex="6"
+                <Button Grid.Column="0" Grid.Row="4" TabIndex="5"
                         Height="30" HorizontalAlignment="Stretch"
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnExport" ClickMode="Release">
                     Export
                 </Button>
 
-                <Button Grid.Column="0" Grid.Row="4" TabIndex="6"
+                <Button Grid.Column="2" Grid.Row="4" TabIndex="6"
                         Height="30" HorizontalAlignment="Stretch"
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnExportAll" ClickMode="Release">
                     Export All
+                </Button>
+
+                <Button Grid.Column="0" Grid.Row="6" TabIndex="7"
+                        Height="30" HorizontalAlignment="Stretch"
+                        BorderBrush="Black" BorderThickness="1"
+                        Click="BtnToggleStatus" ClickMode="Release">
+                    Toggle Status
+                </Button>
+
+                <Button Grid.Column="2" Grid.Row="6" TabIndex="8"
+                        Height="30" HorizontalAlignment="Stretch"
+                        BorderBrush="Black" BorderThickness="1"
+                        Click="BtnInsert" ClickMode="Release">
+                    Insert Record
                 </Button>
             </Grid>
         </Grid>
