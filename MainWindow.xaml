@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TimeTrack"
         mc:Ignorable="d"
-        Title="Time Track" Height="551" Width ="605" MinWidth="600" Icon="time2.png" SizeToContent="Width">
+        Title="Time Track" Height="535" Width ="605" MinWidth="600" Icon="time2.png" SizeToContent="Width">
 
     <Window.DataContext>
         <local:TimeKeeper/>
@@ -13,6 +13,27 @@
 
     <Window.Resources>
         <local:TimeEntryUIConverter x:Key="TimeEntryUIConverter"/>
+        
+        <Style TargetType="local:MainWindow">
+        </Style>
+        
+        <Style TargetType="Button">
+            <Setter Property="FontFamily" Value="Lucid Sans"/>
+            <Setter Property="Background" Value="WhiteSmoke"/>
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Helvetica"/>
+        </Style>
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="White"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="TextBlock.FontFamily" Value="Lucid Sans"/>
+            <Setter Property="TextBlock.FontWeight" Value="SemiBold"/>
+        </Style>
     </Window.Resources>
 
     <Window.InputBindings>
@@ -42,6 +63,7 @@
                 <DataGridTextColumn Header="End" Width="60" Binding="{Binding EndTime, Converter={StaticResource TimeEntryUIConverter}}"/>
                 <DataGridTextColumn Header="Case" Width="87" Binding="{Binding CaseNumber}"/>
                 <DataGridTextColumn Header="Notes" Width="138" Binding="{Binding Notes}"/>
+                
             </DataGrid.Columns>
             
             <DataGrid.InputBindings>
@@ -85,11 +107,11 @@
                     </Grid.RowDefinitions>
 
 
-                    <TextBlock Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Stretch" TextAlignment="Center">Total</TextBlock>
+                    <TextBlock Grid.Row="0" FontWeight="SemiBold" HorizontalAlignment="Stretch" TextAlignment="Center">Total</TextBlock>
                     <TextBlock Grid.Row="1" Foreground="SlateGray" FontWeight="Normal" HorizontalAlignment="Stretch" TextAlignment="Center">hours</TextBlock>
                     <TextBlock Grid.Row="3" HorizontalAlignment="Stretch" TextAlignment="Center" Text="{Binding HoursTotal}"/>
 
-                    <TextBlock Grid.Row="0" Grid.Column="1" FontWeight="Bold" HorizontalAlignment="Stretch" TextAlignment="Center">Gaps</TextBlock>
+                    <TextBlock Grid.Row="0" Grid.Column="1" FontWeight="SemiBold" HorizontalAlignment="Stretch" TextAlignment="Center">Gaps</TextBlock>
                     <TextBlock Grid.Row="1" Grid.Column="1" Foreground="SlateGray" FontWeight="Normal" HorizontalAlignment="Stretch" TextAlignment="Center">minutes</TextBlock>
                     <TextBlock Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" TextAlignment="Center" Text="{Binding GapsTotal}"/>
                 </Grid>
@@ -108,7 +130,7 @@
                         <RowDefinition Height="auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" FontWeight="Bold" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" TextAlignment="Center">Selected Time</TextBlock>
+                    <TextBlock Grid.Row="0" FontWeight="SemiBold" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" TextAlignment="Center">Selected Time</TextBlock>
                     <TextBlock Grid.Row="1" Grid.Column="0" Foreground="SlateGray" FontWeight="Normal" HorizontalAlignment="Stretch" TextAlignment="Center">hours</TextBlock>
                     <TextBlock Grid.Row="1" Grid.Column="1" Foreground="SlateGray" FontWeight="Normal" HorizontalAlignment="Stretch" TextAlignment="Center">minutes</TextBlock>
                     <TextBlock Grid.Row="3" Grid.Column="0" HorizontalAlignment="Stretch" TextAlignment="Center" Text="{Binding SelectedHours}"/>
@@ -139,10 +161,10 @@
                     <RowDefinition Height="12"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" FontWeight="Bold">Start Time</TextBlock>
-                <TextBlock Grid.Row="4" FontWeight="Bold">Finish Time</TextBlock>
-                <TextBlock Grid.Row="8" FontWeight="Bold">Case Number</TextBlock>
-                <TextBlock Grid.Row="12" FontWeight="Bold">Notes</TextBlock>                
+                <TextBlock Grid.Row="0" FontWeight="SemiBold">Start Time</TextBlock>
+                <TextBlock Grid.Row="4" FontWeight="SemiBold">Finish Time</TextBlock>
+                <TextBlock Grid.Row="8" FontWeight="SemiBold">Case Number</TextBlock>
+                <TextBlock Grid.Row="12" FontWeight="SemiBold">Notes</TextBlock>                
 
                 <TextBox Name="FldStartTime" Text="{Binding StartTimeField}" 
                          Grid.Row="2" 
