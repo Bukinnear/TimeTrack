@@ -24,6 +24,7 @@
  * Deleting records from datagrid:
  * https://social.msdn.microsoft.com/Forums/en-US/84fd9b20-33d8-428a-8e44-8df7992a9d4c/datagrid-delete-row?forum=wpf
  * 
- * 
+ * SQLite in C#
+ * https://zetcode.com/csharp/sqlite/
  * 
  */

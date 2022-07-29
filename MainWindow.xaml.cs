@@ -13,10 +13,10 @@ using System.Windows.Media;
 using System.Runtime.CompilerServices;
 
 using CsvHelper;
+using System.Data.SQLite;
 
 namespace TimeTrack
 {
-
     public partial class MainWindow : Window
     {
         private TimeKeeper time_keeper;
@@ -32,6 +32,8 @@ namespace TimeTrack
             time_keeper.UpdateSelectedTime();
             time_keeper.SetStartTimeField();
             time_keeper.UpdateTimeTotals();
+
+            ImportExportHandler.CreateDatabase();
         }
 
         private void ImportEntries()
@@ -492,10 +494,13 @@ namespace TimeTrack
         private static string saveFileName = "TimeTrack_" + DateTime.Today.ToString("yyyy-MM-dd") + ".csv";
         private static string fullSaveFilePath = System.IO.Path.Combine(saveFilepathMonth, saveFileName);
 
+        private static string databasePath = @"URI=file:C:\\temp\\test.db";
+
         public static void Export(ObservableCollection<TimeEntry> entries)
         {
             CreateDirectoryStructure();
 
+            // Write to CSV
             try
             {
                 using (var writer = new StreamWriter(fullSaveFilePath))
@@ -506,6 +511,42 @@ namespace TimeTrack
                 }
             }
             catch (Exception) { }
+
+            if (entries.Count > 0)
+            {
+                // Write to database
+                using (var dbConnection = new SQLiteConnection(databasePath))
+                {
+                    dbConnection.Open();
+
+                    using (var cmd = new SQLiteCommand(dbConnection))
+                    {
+                        for (int i = 0; i < entries.Count; i++)
+                        {
+                            try
+                            {
+                                //TODO: This is currently failing inserts when dealing with existing records
+                                cmd.CommandText = "INSERT INTO time_entries(id, start_time, end_time, case_number, notes, recorded) " +
+                                    "VALUES(@id, @start_time, @end_time, @case_number, @notes, @recorded)" +
+                                    "ON CONFLICT(id) DO UPDATE SET id = id +1";
+                                cmd.Parameters.AddWithValue("@id", entries[i].ID);
+                                cmd.Parameters.AddWithValue("@start_time", entries[i].StartTime);
+                                cmd.Parameters.AddWithValue("@end_time", entries[i].EndTime);
+                                cmd.Parameters.AddWithValue("@case_number", entries[i].CaseNumber);
+                                cmd.Parameters.AddWithValue("@notes", entries[i].Notes);
+                                cmd.Parameters.AddWithValue("@recorded", entries[i].Recorded);
+
+                                cmd.Prepare();
+                                cmd.ExecuteNonQuery();
+                            }
+                            catch (Exception e) 
+                            {
+                                Console.WriteLine("FAILED INSERT:" + e.Message);
+                            }                    
+                        }
+                    }
+                }
+            }
         }    
 
         public static void Import(ObservableCollection<TimeEntry> entries)
@@ -535,7 +576,24 @@ namespace TimeTrack
 
                 if (!Directory.Exists(saveFilepathMonth))
                     Directory.CreateDirectory(saveFilepathMonth);
-            }
+            }            
+        }
+
+        public static void CreateDatabase()
+        {            
+            using (var con = new SQLiteConnection(databasePath))
+            {
+                con.Open();
+
+                using (var cmd = new SQLiteCommand(con))
+                {
+                    cmd.CommandText = "DROP TABLE IF EXISTS time_entries";
+                    cmd.ExecuteNonQuery();
+
+                    cmd.CommandText = @"CREATE TABLE time_entries(id INTEGER PRIMARY KEY, start_time TEXT, end_time TEXT, case_number TEXT, notes TEXT, recorded INTEGER)";
+                    cmd.ExecuteNonQuery();
+                }
+            }            
         }
     }
 
