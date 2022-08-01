@@ -251,7 +251,11 @@ namespace TimeTrack
 
         // Accessor functions
 
-        public DateTime Today { get => today; set => today = value; }
+        public DateTime Today 
+        { 
+            get => today; 
+            set => today = value; 
+        }
         public string CSVName => "TimeTrack_" + Today.ToString("yyyy-MM-dd") + ".csv";
 
         public ObservableCollection<TimeEntry> Entries
@@ -305,24 +309,12 @@ namespace TimeTrack
 
         // Functions
 
-        public void AddEntry(DateTime start_time, DateTime end_time, string case_number = "", string notes = "")
+        public void AddEntry(DateTime date, int id, DateTime start_time, DateTime end_time, string case_number = "", string notes = "")
         {
-            var entry = new TimeEntry(start_time, end_time, case_number, notes);
+            var entry = new TimeEntry(date, id, start_time, end_time, case_number, notes);
             entry.TimeEntryChanged += HandleTimeEntryChanged;
             time_records.Add(entry);
             UpdateTimeTotals();
-        }
-
-        public bool InsertEntry(int index, DateTime start_time, DateTime end_time, string case_number = "", string notes = "")
-        {
-            if (index <= time_records.Count)
-            {
-                time_records.Insert(index, new TimeEntry(start_time, end_time, case_number, notes));
-                UpdateTimeTotals();
-                return true;
-            }
-            else
-                return false;
         }
 
         public bool InsertEntry(int index, TimeEntry entry)
@@ -344,7 +336,8 @@ namespace TimeTrack
 
             if (start_time != null && end_time != null)
             {
-                AddEntry((DateTime)start_time, (DateTime)end_time, case_no, notes);
+                AddEntry(today, current_id_count, (DateTime)start_time, (DateTime)end_time, case_no, notes);
+                current_id_count++;
                 return true;
             }
             else
@@ -356,7 +349,6 @@ namespace TimeTrack
             Entries.Remove(SelectedItem);
             HandleTimeEntryChanged(true);
             SelectLastEntry();
-            ImportExportHandler.Export(time_records);
         }
 
         public void SelectLastEntry()
@@ -445,6 +437,8 @@ namespace TimeTrack
             ImportExportHandler.Export(time_records);
         }
 
+        // Event commands
+
         private ICommand remove_command;
         public ICommand RemoveCommand
         {
@@ -474,6 +468,7 @@ namespace TimeTrack
         // Private vars
 
         private DateTime today;
+        private int current_id_count;
         private ObservableCollection<TimeEntry> time_records;
         private string start_time;
         private string end_time;
@@ -494,10 +489,12 @@ namespace TimeTrack
         private static string saveFileName = "TimeTrack_" + DateTime.Today.ToString("yyyy-MM-dd") + ".csv";
         private static string fullSaveFilePath = System.IO.Path.Combine(saveFilepathMonth, saveFileName);
 
-        private static string databasePath = @"URI=file:C:\\temp\\test.db";
+        private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
 
         public static void Export(ObservableCollection<TimeEntry> entries)
         {
+            /*
+             
             CreateDirectoryStructure();
 
             // Write to CSV
@@ -511,6 +508,7 @@ namespace TimeTrack
                 }
             }
             catch (Exception) { }
+            */
 
             if (entries.Count > 0)
             {
@@ -525,10 +523,8 @@ namespace TimeTrack
                         {
                             try
                             {
-                                //TODO: This is currently failing inserts when dealing with existing records
-                                cmd.CommandText = "INSERT INTO time_entries(id, start_time, end_time, case_number, notes, recorded) " +
-                                    "VALUES(@id, @start_time, @end_time, @case_number, @notes, @recorded)" +
-                                    "ON CONFLICT(id) DO UPDATE SET id = id +1";
+                                cmd.CommandText = "INSERT OR REPLACE INTO time_entries(id, start_time, end_time, case_number, notes, recorded) " +
+                                    "VALUES(@id, @start_time, @end_time, @case_number, @notes, @recorded)";
                                 cmd.Parameters.AddWithValue("@id", entries[i].ID);
                                 cmd.Parameters.AddWithValue("@start_time", entries[i].StartTime);
                                 cmd.Parameters.AddWithValue("@end_time", entries[i].EndTime);
@@ -551,6 +547,8 @@ namespace TimeTrack
 
         public static void Import(ObservableCollection<TimeEntry> entries)
         {
+
+            /*
             try
             {
                 if (File.Exists(fullSaveFilePath))
@@ -565,6 +563,7 @@ namespace TimeTrack
                 }
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
+            */
         }
 
         private static void CreateDirectoryStructure()
@@ -580,7 +579,8 @@ namespace TimeTrack
         }
 
         public static void CreateDatabase()
-        {            
+        {
+            return;
             using (var con = new SQLiteConnection(databasePath))
             {
                 con.Open();

@@ -11,31 +11,30 @@ namespace TimeTrack
 
     public class TimeEntry : INotifyPropertyChanged
     {
-        public TimeEntry()
+        public TimeEntry(DateTime date, int id)
         {
+            this.date = date;
+            this.id = id;
             start_time = null;
             end_time = null;
             case_number = "";
             notes = "";
-            ID = current_id_index += 1;
         }
-        public TimeEntry(DateTime in_start, DateTime in_end)
+        public TimeEntry(DateTime date, int id, DateTime start_time, DateTime end_time, string case_number, string notes)
         {
-            start_time = in_start;
-            end_time = in_end;
-            case_number = "";
-            notes = "";
-            ID = current_id_index += 1;
+            this.date = date;
+            this.id = id;
+            this.start_time = start_time;
+            this.end_time = end_time;
+            this.case_number = case_number;
+            this.notes = notes;
         }
-        public TimeEntry(DateTime in_start, DateTime in_end, string in_case, string in_notes)
+        
+        public DateTime Date
         {
-            start_time = in_start;
-            end_time = in_end;
-            case_number = in_case;
-            notes = in_notes;
-            ID = current_id_index += 1;
+            get { return date; }
+            set { date = value; OnPropertyChanged(); }
         }
-                
         public int ID
         {
             get { return id; }
@@ -127,8 +126,7 @@ namespace TimeTrack
             TimeEntryChanged?.Invoke(time_changed);
         }
 
-        private static int current_id_index;
-
+        private DateTime date;
         private int id;
         private DateTime? start_time;
         private DateTime? end_time;
