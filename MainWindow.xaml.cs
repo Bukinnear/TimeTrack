@@ -33,16 +33,14 @@ namespace TimeTrack
             time_keeper.SetStartTimeField();
             time_keeper.UpdateTimeTotals();
 
-            ImportExportHandler.CreateDatabase();
+            Database.CreateDatabase();
         }
 
         private void ImportEntries()
         {
             //time_keeper.ImportFromCSV("DEBUG.csv");
-            ImportExportHandler.Import(time_keeper.Entries);
-
-            if (time_keeper.Entries.Count > 0)
-                time_keeper.Today = ((DateTime)time_keeper.Entries[0].StartTime).Date;
+            //Database.Retrieve(time_keeper.Date);
+            time_keeper.CurrentIdCount = Database.CurrentIdCount(time_keeper.Date);
         }
 
         private void Submit()
@@ -54,7 +52,7 @@ namespace TimeTrack
                 DgTimeRecords.SelectedIndex = time_keeper.Entries.Count - 1;
                 DgTimeRecords.ScrollIntoView(time_keeper.Entries.Last());
                 FldEndTime.Focus();
-                ImportExportHandler.Export(time_keeper.Entries);
+                Database.Update(time_keeper.Entries);
             }
         }
 
@@ -65,14 +63,12 @@ namespace TimeTrack
 
         private void BtnInsert(object sender, RoutedEventArgs e)
         {
-            var insert = new TimeEntry();
-
-            if (time_keeper.InsertEntry(DgTimeRecords.SelectedIndex, insert))
+            if (time_keeper.InsertBlankEntry(DgTimeRecords.SelectedIndex))
             {
                 DgTimeRecords.SelectedIndex = DgTimeRecords.SelectedIndex - 1;
-                DgTimeRecords.ScrollIntoView(insert);
+                //DgTimeRecords.ScrollIntoView(); TODO: scroll to inserted entry
                 DgTimeRecords.Focus();
-                ImportExportHandler.Export(time_keeper.Entries);
+                Database.Update(time_keeper.Entries);
             }
         }
 
@@ -124,7 +120,7 @@ namespace TimeTrack
             if (!retry)
             {
                 selected.Recorded = true;
-                ImportExportHandler.Export(time_keeper.Entries);
+                Database.Update(time_keeper.Entries);
             }
         }
 
@@ -159,7 +155,7 @@ namespace TimeTrack
             foreach (var i in DgTimeRecords.Items)
                 (i as TimeEntry).Recorded = true;
 
-            ImportExportHandler.Export(time_keeper.Entries);
+            Database.Update(time_keeper.Entries);
 
         }
 
@@ -244,19 +240,23 @@ namespace TimeTrack
     {
         public TimeKeeper()
         {
-            time_records = new ObservableCollection<TimeEntry>();
-            
-            today = DateTime.Today;
+            time_records = new ObservableCollection<TimeEntry>();            
+            date = DateTime.Today.Date;
+            current_id_count = 0;
         }
 
         // Accessor functions
 
-        public DateTime Today 
+        public DateTime Date 
         { 
-            get => today; 
-            set => today = value; 
+            get => date; 
+            set => date = value; 
         }
-        public string CSVName => "TimeTrack_" + Today.ToString("yyyy-MM-dd") + ".csv";
+        public int CurrentIdCount
+        {
+            set => current_id_count = value;
+        }
+        public string CSVName => "TimeTrack_" + Date.ToString("yyyy-MM-dd") + ".csv";
 
         public ObservableCollection<TimeEntry> Entries
         {
@@ -317,16 +317,14 @@ namespace TimeTrack
             UpdateTimeTotals();
         }
 
-        public bool InsertEntry(int index, TimeEntry entry)
+        public bool InsertBlankEntry(int index)
         {
-            if (time_records.Count > 0 && index <= time_records.Count)
-            {
-                time_records.Insert(index, entry);
-                UpdateTimeTotals();
-                return true;
-            }
-            else
+            if (time_records.Count == 0 || index > time_records.Count)
                 return false;
+            
+            time_records.Insert(index, new TimeEntry(date, ++current_id_count));
+            UpdateTimeTotals();
+            return true;
         }
 
         public bool SubmitEntry()
@@ -334,14 +332,11 @@ namespace TimeTrack
             DateTime? start_time = StartTimeFieldAsTime();
             DateTime? end_time = EndTimeFieldAsTime();
 
-            if (start_time != null && end_time != null)
-            {
-                AddEntry(today, current_id_count, (DateTime)start_time, (DateTime)end_time, case_no, notes);
-                current_id_count++;
-                return true;
-            }
-            else
+            if (start_time == null || end_time == null)
                 return false;
+            
+            AddEntry(date, ++current_id_count, (DateTime)start_time, (DateTime)end_time, case_no, notes);
+            return true;
         }
 
         public void RemoveCurrentlySelectedEntry()
@@ -434,7 +429,7 @@ namespace TimeTrack
                 UpdateSelectedTime();
                 SetStartTimeField();
             }
-            ImportExportHandler.Export(time_records);
+            Database.Update(time_records);
         }
 
         // Event commands
@@ -467,7 +462,7 @@ namespace TimeTrack
 
         // Private vars
 
-        private DateTime today;
+        private DateTime date;
         private int current_id_count;
         private ObservableCollection<TimeEntry> time_records;
         private string start_time;
@@ -482,7 +477,7 @@ namespace TimeTrack
         private TimeEntry selected_item;
     }
 
-    class ImportExportHandler
+    class Database
     {
         private static string saveFilepathYear = DateTime.Today.ToString("yyyy");
         private static string saveFilepathMonth = System.IO.Path.Combine(saveFilepathYear, DateTime.Today.ToString("MM"));
@@ -491,7 +486,7 @@ namespace TimeTrack
 
         private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
 
-        public static void Export(ObservableCollection<TimeEntry> entries)
+        public static void Update(ObservableCollection<TimeEntry> entries)
         {
             /*
              
@@ -510,6 +505,8 @@ namespace TimeTrack
             catch (Exception) { }
             */
 
+            return;
+
             if (entries.Count > 0)
             {
                 // Write to database
@@ -523,8 +520,9 @@ namespace TimeTrack
                         {
                             try
                             {
-                                cmd.CommandText = "INSERT OR REPLACE INTO time_entries(id, start_time, end_time, case_number, notes, recorded) " +
-                                    "VALUES(@id, @start_time, @end_time, @case_number, @notes, @recorded)";
+                                cmd.CommandText = "INSERT OR REPLACE INTO time_entries(date, id, start_time, end_time, case_number, notes, recorded) " +
+                                    "VALUES(@date, @id, @start_time, @end_time, @case_number, @notes, @recorded)";
+                                cmd.Parameters.AddWithValue("@date", entries[i].Date);
                                 cmd.Parameters.AddWithValue("@id", entries[i].ID);
                                 cmd.Parameters.AddWithValue("@start_time", entries[i].StartTime);
                                 cmd.Parameters.AddWithValue("@end_time", entries[i].EndTime);
@@ -545,8 +543,10 @@ namespace TimeTrack
             }
         }    
 
-        public static void Import(ObservableCollection<TimeEntry> entries)
+        public static ObservableCollection<TimeEntry> Retrieve(DateTime date)
         {
+
+            return null;
 
             /*
             try
@@ -564,6 +564,29 @@ namespace TimeTrack
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
             */
+        }
+
+        public static int CurrentIdCount(DateTime date)
+        {
+            using (var dbConnection = new SQLiteConnection(databasePath))
+            {
+                dbConnection.Open();
+
+                using (var cmd = new SQLiteCommand(dbConnection))
+                {
+                    cmd.CommandText = "SELECT MAX(id) FROM time_entries WHERE date = @date;";
+                    cmd.Parameters.AddWithValue("@date", "2022-07-29");//date.Date.ToShortDateString());
+                    cmd.Prepare();
+                    var query = cmd.ExecuteReader();
+                    query.Read();
+                    var result = query.GetInt32(0);
+                    if (result.GetType().ToString() != "System.DBNull")
+                    {
+                        return result;
+                    }
+                }
+            }
+            return 0;
         }
 
         private static void CreateDirectoryStructure()
