@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-
-using System.Runtime.CompilerServices;
-
-using CsvHelper;
-using System.Data.SQLite;
 
 namespace TimeTrack
 {
@@ -38,8 +35,7 @@ namespace TimeTrack
 
         private void ImportEntries()
         {
-            //time_keeper.ImportFromCSV("DEBUG.csv");
-            //Database.Retrieve(time_keeper.Date);
+            time_keeper.Entries = Database.Retrieve(time_keeper.Date);
             time_keeper.CurrentIdCount = Database.CurrentIdCount(time_keeper.Date);
         }
 
@@ -78,7 +74,7 @@ namespace TimeTrack
                 return;
 
             TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
-            string text = selected.StartTimeAsShortString() + " - " + selected.EndTimeAsShortString() + "\n" + selected.Notes;
+            string text = selected.StartTimeAsString() + " - " + selected.EndTimeAsString() + "\n" + selected.Notes;
 
             bool retry;
             int retry_count = 0;
@@ -146,7 +142,7 @@ namespace TimeTrack
                 string case_number = entry.CaseNumber != null && entry.CaseNumber != "" ? entry.CaseNumber.ToString().Trim() : "nil";
                 string hours = entry.Hours().ToString();
                 string minutes = entry.Minutes().ToString();
-                string time_period = entry.StartTimeAsShortString() + " - " + entry.EndTimeAsShortString();
+                string time_period = entry.StartTimeAsString() + " - " + entry.EndTimeAsString();
 
                 output[i] = case_number + "," + hours + "," + minutes + "," + time_period + "," + entry.Notes;
             }
@@ -179,12 +175,12 @@ namespace TimeTrack
             }
 
             foreach (var i in DgTimeRecords.SelectedItems)
-                {
-                    if (i.GetType().ToString() != "TimeTrack.TimeEntry")
-                        continue;
+            {
+                if (i.GetType().ToString() != "TimeTrack.TimeEntry")
+                    continue;
 
                 ((TimeEntry)i).Recorded = new_status;
-            }            
+            }
         }
 
         private void ChkLunch_Checked(object sender, RoutedEventArgs e)
@@ -199,11 +195,11 @@ namespace TimeTrack
 
             if (time_keeper.EndTimeField == null || time_keeper.EndTimeField == "")
             {
-                var EndLunch = TimeStringConverter.StringToDateTime(time_keeper.StartTimeField);
+                var EndLunch = TimeStringConverter.StringToTimeSpan(time_keeper.StartTimeField);
                 if (EndLunch != null)
                 {
-                    EndLunch = ((DateTime)EndLunch).AddHours(1);
-                    time_keeper.EndTimeField = ((DateTime)EndLunch).ToShortTimeString();
+                    EndLunch = ((TimeSpan)EndLunch).Add(TimeSpan.FromHours(1));
+                    time_keeper.EndTimeField = ((TimeSpan)EndLunch).ToString();
                 }
             }
         }
@@ -240,17 +236,17 @@ namespace TimeTrack
     {
         public TimeKeeper()
         {
-            time_records = new ObservableCollection<TimeEntry>();            
+            time_records = new ObservableCollection<TimeEntry>();
             date = DateTime.Today.Date;
             current_id_count = 0;
         }
 
         // Accessor functions
 
-        public DateTime Date 
-        { 
-            get => date; 
-            set => date = value; 
+        public DateTime Date
+        {
+            get => date;
+            set => date = value;
         }
         public int CurrentIdCount
         {
@@ -260,7 +256,7 @@ namespace TimeTrack
 
         public ObservableCollection<TimeEntry> Entries
         {
-            get => time_records; 
+            get => time_records;
             set { time_records = value; OnPropertyChanged(); }
         }
         public string StartTimeField
@@ -270,25 +266,25 @@ namespace TimeTrack
         }
         public string EndTimeField
         {
-            get => end_time; 
+            get => end_time;
             set { end_time = value; OnPropertyChanged(); }
         }
-        public DateTime? StartTimeFieldAsTime() => TimeStringConverter.StringToDateTime(start_time); 
-        public DateTime? EndTimeFieldAsTime() => TimeStringConverter.StringToDateTime(end_time); 
+        public TimeSpan? StartTimeFieldAsTime() => TimeStringConverter.StringToTimeSpan(start_time);
+        public TimeSpan? EndTimeFieldAsTime() => TimeStringConverter.StringToTimeSpan(end_time);
         public string CaseNumberField
         {
-            get => case_no; 
+            get => case_no;
             set { case_no = value; OnPropertyChanged(); }
         }
         public string NotesField
         {
-            get => notes; 
+            get => notes;
             set { notes = value; OnPropertyChanged(); }
         }
-        public double HoursTotal 
-        { 
-            get => hours_total; 
-            set { hours_total = value; OnPropertyChanged(); } 
+        public double HoursTotal
+        {
+            get => hours_total;
+            set { hours_total = value; OnPropertyChanged(); }
         }
         public double GapsTotal
         {
@@ -309,10 +305,10 @@ namespace TimeTrack
 
         // Functions
 
-        public void AddEntry(DateTime date, int id, DateTime start_time, DateTime end_time, string case_number = "", string notes = "")
+        public void AddEntry(DateTime date, int id, TimeSpan start_time, TimeSpan end_time, string case_number = "", string notes = "")
         {
             var entry = new TimeEntry(date, id, start_time, end_time, case_number, notes);
-            entry.TimeEntryChanged += HandleTimeEntryChanged;
+            entry.TimeEntryChanged += OnTimeEntryChanged;
             time_records.Add(entry);
             UpdateTimeTotals();
         }
@@ -321,7 +317,7 @@ namespace TimeTrack
         {
             if (time_records.Count == 0 || index > time_records.Count)
                 return false;
-            
+
             time_records.Insert(index, new TimeEntry(date, ++current_id_count));
             UpdateTimeTotals();
             return true;
@@ -329,20 +325,21 @@ namespace TimeTrack
 
         public bool SubmitEntry()
         {
-            DateTime? start_time = StartTimeFieldAsTime();
-            DateTime? end_time = EndTimeFieldAsTime();
+            TimeSpan? start_time = StartTimeFieldAsTime();
+            TimeSpan? end_time = EndTimeFieldAsTime();
 
             if (start_time == null || end_time == null)
                 return false;
-            
-            AddEntry(date, ++current_id_count, (DateTime)start_time, (DateTime)end_time, case_no, notes);
+
+            AddEntry(date, ++current_id_count, (TimeSpan)start_time, (TimeSpan)end_time, case_no, notes);
             return true;
         }
 
         public void RemoveCurrentlySelectedEntry()
         {
+            Database.Delete(SelectedItem.Date, SelectedItem.ID);
             Entries.Remove(SelectedItem);
-            HandleTimeEntryChanged(true);
+            OnTimeEntryChanged(true);
             SelectLastEntry();
         }
 
@@ -353,7 +350,7 @@ namespace TimeTrack
             else
                 UpdateSelectedTime();
         }
-        
+
         public void ClearFieldsAndSetStartTime()
         {
             SetStartTimeField();
@@ -397,14 +394,14 @@ namespace TimeTrack
                 var time_span = (SelectedItem.EndTime - SelectedItem.StartTime);
                 if (time_span != null)
                 {
-                    SelectedHours = (((TimeSpan)time_span).Hours).ToString();
-                    SelectedMins = (((TimeSpan)time_span).Minutes).ToString();
+                    SelectedHours = ((TimeSpan)time_span).Hours.ToString();
+                    SelectedMins = ((TimeSpan)time_span).Minutes.ToString();
                 }
                 else
                     blank_value = true;
             }
             else
-                blank_value = true;  
+                blank_value = true;
 
             if (blank_value)
             {
@@ -416,12 +413,12 @@ namespace TimeTrack
         public void SetStartTimeField()
         {
             if (time_records.Count > 0)
-                StartTimeField = time_records.Last<TimeEntry>().EndTime?.ToShortTimeString();
+                StartTimeField = time_records.Last<TimeEntry>().EndTimeAsString();
             else
                 StartTimeField = null;
         }
 
-        public void HandleTimeEntryChanged(bool time_changed)
+        public void OnTimeEntryChanged(bool time_changed)
         {
             if (time_changed)
             {
@@ -430,6 +427,14 @@ namespace TimeTrack
                 SetStartTimeField();
             }
             Database.Update(time_records);
+        }
+
+        // Inheritance items
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
         // Event commands
@@ -444,20 +449,12 @@ namespace TimeTrack
                 return remove_command;
             }
         }
-        
+
         private ICommand submit_command;
         public ICommand SubmitCommand
         {
             get => submit_command;
             set => submit_command = value;
-        }
-
-        // Inheritance items
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
         // Private vars
@@ -486,27 +483,10 @@ namespace TimeTrack
 
         private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
 
+        public const string date_format = "yyyy-MM-dd";
+
         public static void Update(ObservableCollection<TimeEntry> entries)
         {
-            /*
-             
-            CreateDirectoryStructure();
-
-            // Write to CSV
-            try
-            {
-                using (var writer = new StreamWriter(fullSaveFilePath))
-                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-                {
-                    csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
-                    csv.WriteRecords(entries);
-                }
-            }
-            catch (Exception) { }
-            */
-
-            return;
-
             if (entries.Count > 0)
             {
                 // Write to database
@@ -522,7 +502,7 @@ namespace TimeTrack
                             {
                                 cmd.CommandText = "INSERT OR REPLACE INTO time_entries(date, id, start_time, end_time, case_number, notes, recorded) " +
                                     "VALUES(@date, @id, @start_time, @end_time, @case_number, @notes, @recorded)";
-                                cmd.Parameters.AddWithValue("@date", entries[i].Date);
+                                cmd.Parameters.AddWithValue("@date", DateToString(entries[i].Date));
                                 cmd.Parameters.AddWithValue("@id", entries[i].ID);
                                 cmd.Parameters.AddWithValue("@start_time", entries[i].StartTime);
                                 cmd.Parameters.AddWithValue("@end_time", entries[i].EndTime);
@@ -533,39 +513,75 @@ namespace TimeTrack
                                 cmd.Prepare();
                                 cmd.ExecuteNonQuery();
                             }
-                            catch (Exception e) 
+                            catch (Exception e)
                             {
                                 Console.WriteLine("FAILED INSERT:" + e.Message);
-                            }                    
+                                throw e;
+                            }
                         }
                     }
                 }
             }
-        }    
-
-        public static ObservableCollection<TimeEntry> Retrieve(DateTime date)
+        }
+        public static void Delete(DateTime date, int id)
         {
-
-            return null;
-
-            /*
-            try
+            using (var dbConnection = new SQLiteConnection(databasePath))
             {
-                if (File.Exists(fullSaveFilePath))
+                dbConnection.Open();
+
+                using (var cmd = new SQLiteCommand(dbConnection))
                 {
-                    using (var reader = new StreamReader(fullSaveFilePath))
-                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                    {
-                        csv.Configuration.RegisterClassMap<TimeEntryCSVMap>();
-                        foreach (var entry in csv.GetRecords<TimeEntry>())
-                            entries.Add(entry);
-                    }
+                    cmd.CommandText = "DELETE FROM time_entries WHERE date = @date";
+                    cmd.Parameters.AddWithValue("@date", DateToString(date));
+                    cmd.Prepare();
+                    cmd.ExecuteNonQuery();
                 }
             }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }
-            */
         }
+        public static ObservableCollection<TimeEntry> Retrieve(DateTime date)
+        {
+            var return_val = new ObservableCollection<TimeEntry>();
 
+            using (var dbConnection = new SQLiteConnection(databasePath))
+            {
+                dbConnection.Open();
+
+                using (var cmd = new SQLiteCommand(dbConnection))
+                {
+                    cmd.CommandText = "SELECT * FROM time_entries WHERE date = @date";
+                    cmd.Parameters.AddWithValue("@date", DateToString(date));
+
+                    cmd.Prepare();
+                    var query = cmd.ExecuteReader();
+
+                    while (query.Read())
+                    {
+                        var out_date = StringToDate(query.GetString(0));
+                        var id = query.GetInt32(1);
+                        int recorded = query.GetInt32(6);
+
+                        TimeSpan? start_time = null;
+                        TimeSpan? end_time = null;
+                        string case_no = "";
+                        string notes = "";
+                        
+
+                        if (!query.IsDBNull(2))
+                            start_time = StringToTimeSpan(query.GetString(2));
+                        if (!query.IsDBNull(3))
+                            end_time = StringToTimeSpan(query.GetString(3));
+                        if (!query.IsDBNull(4))
+                            case_no = query.GetString(4);
+                        if (!query.IsDBNull(5))
+                            notes = query.GetString(5);
+
+                        return_val.Add(new TimeEntry(out_date, id, start_time, end_time, case_no, notes, Convert.ToBoolean(recorded)));
+                    }
+
+                    return return_val;
+                }
+            }
+        }
         public static int CurrentIdCount(DateTime date)
         {
             using (var dbConnection = new SQLiteConnection(databasePath))
@@ -575,20 +591,34 @@ namespace TimeTrack
                 using (var cmd = new SQLiteCommand(dbConnection))
                 {
                     cmd.CommandText = "SELECT MAX(id) FROM time_entries WHERE date = @date;";
-                    cmd.Parameters.AddWithValue("@date", "2022-07-29");//date.Date.ToShortDateString());
+                    cmd.Parameters.AddWithValue("@date", DateToString(date));
                     cmd.Prepare();
                     var query = cmd.ExecuteReader();
-                    query.Read();
-                    var result = query.GetInt32(0);
-                    if (result.GetType().ToString() != "System.DBNull")
-                    {
-                        return result;
-                    }
+                    if (!query.Read() || query.IsDBNull(0))
+                        return 0;
+                    return query.GetInt32(0);
                 }
             }
-            return 0;
         }
+        public static void CreateDatabase()
+        {
+            /* 
+                using (var con = new SQLiteConnection(databasePath))
+                {
+                    con.Open();
 
+                    using (var cmd = new SQLiteCommand(con))
+                    {
+                        cmd.CommandText = "DROP TABLE IF EXISTS time_entries";
+                        cmd.ExecuteNonQuery();
+
+                        cmd.CommandText = @"CREATE TABLE time_entries(id INTEGER PRIMARY KEY, start_time TEXT, end_time TEXT, case_number TEXT, notes TEXT, recorded INTEGER)";
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            */
+            return;
+        }
         private static void CreateDirectoryStructure()
         {
             if (!File.Exists(fullSaveFilePath))
@@ -598,31 +628,25 @@ namespace TimeTrack
 
                 if (!Directory.Exists(saveFilepathMonth))
                     Directory.CreateDirectory(saveFilepathMonth);
-            }            
+            }
         }
-
-        public static void CreateDatabase()
+        private static string DateToString(DateTime date)
         {
-            return;
-            using (var con = new SQLiteConnection(databasePath))
-            {
-                con.Open();
-
-                using (var cmd = new SQLiteCommand(con))
-                {
-                    cmd.CommandText = "DROP TABLE IF EXISTS time_entries";
-                    cmd.ExecuteNonQuery();
-
-                    cmd.CommandText = @"CREATE TABLE time_entries(id INTEGER PRIMARY KEY, start_time TEXT, end_time TEXT, case_number TEXT, notes TEXT, recorded INTEGER)";
-                    cmd.ExecuteNonQuery();
-                }
-            }            
+            return date.ToString(date_format);
         }
+        private static DateTime StringToDate(string str)
+        {
+            return DateTime.ParseExact(str, date_format, DateTimeFormatInfo.InvariantInfo);
+        }
+        private static TimeSpan StringToTimeSpan(string str)
+        {
+            return TimeSpan.ParseExact(str, "c", CultureInfo.InvariantCulture, TimeSpanStyles.None);
+        }
+
     }
 
     public static class TimeStringConverter
     {
-        static DateTime today = DateTime.Today;
         static DateTime work_hours_start = DateTime.ParseExact("07:00AM", "hh:mmtt", CultureInfo.InvariantCulture);
         static DateTime work_hours_end = DateTime.ParseExact("07:00PM", "hh:mmtt", CultureInfo.InvariantCulture);
 
@@ -636,39 +660,37 @@ namespace TimeTrack
              * \d{1,2}          : between 1, and 2 digit characters
              * [;:.]?           : ";", ":", or "." - optional
              * ()               : encapsulated logic. The same as you are used to.
-             * (\d{2})?         : exactly 2 digit characters - option
+             * (\d{2})?         : exactly 2 digit characters - optional
              * (\s?)+           : any number of whitespaces - optional
              * (...)?           : everything contained in the brackets is optional
-             * (?i: ...         : contained commands will be case-insensitive
-             * ...[AP]M)?      : either A, or P characters, followed by M. All optional
+             * (?i: ...)        : contained commands will be case-insensitive
+             * ...[AP]M)?       : either A, or P characters, followed by M. All optional
              * $                : the end of the string
              */
             string valid_time_format = @"^\d{1,2}[;:.]?(\d{2})?((\s?)+(?i:[AP]M)?)?$";
 
-            /* Regex:
-             * Start of the string
-             * 2 digits
-             * either ;, : or . - optional
-             * 2 digits - optional
-             * case insensitive
-             * any number of whitespaces
-             * fail if "AM" is present
-             * PM - optional
-             * end of the string
+            /* Regex Explantion:
+             * ^                : Start of the string
+             * \d{1,2}          : 2 digits
+             * [;:.]?           : either ";", ":" or "." - optional
+             * (\d{2})?         : 2 digits - optional
+             * (?i: ...)?       : contained commands will be case-insensitive. All optional
+             * (\s?)+           : any number of whitespaces - optional
+             * (?!AM)           : fail if "AM" is present
+             * (PM)?            : PM - optional
+             * $                : end of the string
              */
             string valid_24hour_format = @"^\d{2}[;:.]?(\d{2})?(?i:(\s?)+(?!AM)(PM)?)?$";
 
             if (Regex.IsMatch(value, valid_time_format))
             {
                 if (Is24HourFormat(value))
-                {
                     return Regex.IsMatch(value, valid_24hour_format);
-                }
-                else
-                    return true;
+
+                return true;
             }
-            else
-                return false;
+
+            return false;
         }
         public static bool Is24HourFormat(string value)
         {
@@ -726,22 +748,20 @@ namespace TimeTrack
         }
         private static DateTime ClampToWorkHours(DateTime value)
         {
-            if (value.TimeOfDay < work_hours_start.TimeOfDay || value.TimeOfDay > work_hours_end.TimeOfDay)
-            {
-                switch (value.ToString("tt"))
-                {
-                    case "AM":
-                        value = value.AddHours(12);
-                        break;
-                    case "PM":
-                        value = value.AddHours(-12);
-                        break;
-                }
-            }
+            if (value.TimeOfDay > work_hours_start.TimeOfDay && value.TimeOfDay < work_hours_end.TimeOfDay)
+                return value;
 
-            return value;
+            switch (value.ToString("tt"))
+            {
+                case "AM":
+                    return value.AddHours(12);
+                case "PM":
+                    return value.AddHours(-12);
+                default:
+                    return value;
+            }
         }
-        public static DateTime? StringToDateTime(string value)
+        public static TimeSpan? StringToTimeSpan(string value)
         {
             if (!IsValidTimeFormat(value))
                 return null;
@@ -778,12 +798,10 @@ namespace TimeTrack
                 return null;
             else
             {
-                return_val = today.Date + return_val.TimeOfDay;
-
                 if (!time_period_present && !format_24_hour)
                     return_val = ClampToWorkHours(return_val);
 
-                return return_val;
+                return return_val.TimeOfDay;
             }
         }
     }
@@ -840,6 +858,8 @@ namespace TimeTrack
         }
 
         public bool CanExecute(object parameter) { return true; }
+#pragma warning disable CS0067 // boilerplate code
         public event EventHandler CanExecuteChanged;
+#pragma warning restore CS0067 // boilerplate code
     }
 }

@@ -20,7 +20,7 @@ namespace TimeTrack
             case_number = "";
             notes = "";
         }
-        public TimeEntry(DateTime date, int id, DateTime start_time, DateTime end_time, string case_number, string notes)
+        public TimeEntry(DateTime date, int id, TimeSpan? start_time, TimeSpan? end_time, string case_number, string notes, bool recorded = false)
         {
             this.date = date;
             this.id = id;
@@ -28,6 +28,7 @@ namespace TimeTrack
             this.end_time = end_time;
             this.case_number = case_number;
             this.notes = notes;
+            this.recorded = recorded;
         }
         
         public DateTime Date
@@ -40,7 +41,7 @@ namespace TimeTrack
             get { return id; }
             set { id = value; OnPropertyChanged(); }
         }
-        public DateTime? StartTime
+        public TimeSpan? StartTime
         {
             get { return start_time; }
             set 
@@ -50,7 +51,7 @@ namespace TimeTrack
                 OnTimeEntryChanged(true);
             }
         }
-        public DateTime? EndTime
+        public TimeSpan? EndTime
         {
             get { return end_time; }
             set 
@@ -88,30 +89,30 @@ namespace TimeTrack
             set { recorded = value; OnPropertyChanged(); OnTimeEntryChanged(false); }
         }
 
-        public string StartTimeAsShortString()
+        public string StartTimeAsString()
         {
             if (start_time == null)
                 return "";
-            return ((DateTime)start_time).ToShortTimeString();
+            return (DateTime.Today + (TimeSpan)start_time).ToString("h:mm tt");
         }
-        public string EndTimeAsShortString()
+        public string EndTimeAsString()
         {
             if (end_time == null)
                 return "";
-            return ((DateTime)end_time).ToShortTimeString();
-            
+            return (DateTime.Today + (TimeSpan)end_time).ToString("h:mm tt");
+
         }
         public int Hours()
         {
             if (start_time == null || end_time == null)
                 return 0;
-            return (((DateTime)end_time) - ((DateTime)start_time)).Hours;
+            return ((TimeSpan)(end_time - start_time)).Hours;
         }
         public int Minutes()
         {
             if (start_time == null || end_time == null)
                 return 0;
-            return (((DateTime)end_time) - ((DateTime)start_time)).Minutes;
+            return ((TimeSpan)(end_time - start_time)).Minutes;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -128,8 +129,8 @@ namespace TimeTrack
 
         private DateTime date;
         private int id;
-        private DateTime? start_time;
-        private DateTime? end_time;
+        private TimeSpan? start_time;
+        private TimeSpan? end_time;
         private string case_number;
         private string notes;
         private bool recorded;
@@ -141,12 +142,12 @@ namespace TimeTrack
         {
             if (value == null)
                 return null;
-            else
-                return ((DateTime)value).ToShortTimeString();
+            
+            return (DateTime.Today + (TimeSpan)value).ToString("hh:mm tt");
         }
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            return TimeStringConverter.StringToDateTime((string)value);
+            return TimeStringConverter.StringToTimeSpan((string)value);
         }
     }
 
