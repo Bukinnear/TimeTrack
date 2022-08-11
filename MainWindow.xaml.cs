@@ -162,8 +162,10 @@ namespace TimeTrack
 
                 if (entry.Recorded)
                     continue;
+                if (string.IsNullOrEmpty(entry.CaseNumber.Trim()))
+                    continue;
 
-                string case_number = entry.CaseNumber != null && entry.CaseNumber != "" ? entry.CaseNumber.ToString().Trim() : "nil";
+                string case_number = entry.CaseNumber.Trim();
                 string hours = entry.Hours().ToString();
                 string minutes = entry.Minutes().ToString();
                 string time_period = entry.StartTimeAsString() + " - " + entry.EndTimeAsString();
