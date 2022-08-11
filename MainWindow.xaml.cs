@@ -175,7 +175,12 @@ namespace TimeTrack
             File.WriteAllLines(path, output);
 
             foreach (var i in DgTimeRecords.Items)
-                (i as TimeEntry).Recorded = true;
+            {
+                var entry = i as TimeEntry;
+                if (!string.IsNullOrEmpty(entry.CaseNumber.Trim()))
+                    continue;
+                entry.Recorded = true;
+            }
 
             Database.Update(time_keeper.Entries);
 
