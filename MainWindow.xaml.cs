@@ -177,7 +177,7 @@ namespace TimeTrack
             foreach (var i in DgTimeRecords.Items)
             {
                 var entry = i as TimeEntry;
-                if (!string.IsNullOrEmpty(entry.CaseNumber.Trim()))
+                if (string.IsNullOrEmpty(entry.CaseNumber.Trim()))
                     continue;
                 entry.Recorded = true;
             }
