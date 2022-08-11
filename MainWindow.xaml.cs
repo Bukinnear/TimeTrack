@@ -520,8 +520,9 @@ namespace TimeTrack
         private static string saveFileName = "TimeTrack_" + DateTime.Today.ToString("yyyy-MM-dd") + ".csv";
         private static string fullSaveFilePath = System.IO.Path.Combine(saveFilepathMonth, saveFileName);
 
+        private static string databasePath = "timetrack.db";
         //private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
-        private static string databasePath = @"URI=file:timetrack.db";
+        private static string databaseURI = @"URI=file:" + databasePath;
 
         public const string date_format = "yyyy-MM-dd";
 
@@ -534,7 +535,7 @@ namespace TimeTrack
             if (entries.Count > 0)
             {
                 // Write to database
-                using (var dbConnection = new SQLiteConnection(databasePath))
+                using (var dbConnection = new SQLiteConnection(databaseURI))
                 {
                     dbConnection.Open();
 
@@ -569,7 +570,7 @@ namespace TimeTrack
         }
         public static void Delete(DateTime date, int id)
         {
-            using (var dbConnection = new SQLiteConnection(databasePath))
+            using (var dbConnection = new SQLiteConnection(databaseURI))
             {
                 dbConnection.Open();
 
@@ -586,7 +587,7 @@ namespace TimeTrack
         {
             var return_val = new ObservableCollection<TimeEntry>();
 
-            using (var dbConnection = new SQLiteConnection(databasePath))
+            using (var dbConnection = new SQLiteConnection(databaseURI))
             {
                 dbConnection.Open();
 
@@ -628,7 +629,7 @@ namespace TimeTrack
         }
         public static int CurrentIdCount(DateTime date)
         {
-            using (var dbConnection = new SQLiteConnection(databasePath))
+            using (var dbConnection = new SQLiteConnection(databaseURI))
             {
                 dbConnection.Open();
 
@@ -646,7 +647,7 @@ namespace TimeTrack
         }
         public static void CreateDatabase()
         {
-            using (var con = new SQLiteConnection(databasePath))
+            using (var con = new SQLiteConnection(databaseURI))
             {
                 con.Open();
 
