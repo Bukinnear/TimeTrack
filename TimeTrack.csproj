@@ -297,7 +297,7 @@
     <Resource Include="ExeIcon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="External Resoureces.txt" />
+    <Resource Include="External Resources.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
