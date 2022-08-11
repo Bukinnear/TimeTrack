@@ -23,20 +23,44 @@ namespace TimeTrack
             InitializeComponent();
             time_keeper = DataContext as TimeKeeper;
 
-            ImportEntries();
+            if (Database.Exists())
+                LoadEntriesForDate(DateTime.Today);
+            else
+            {
+                switch (PromptForNewDatabase())
+                {
+                    case MessageBoxResult.OK:
+                        Database.CreateDatabase();
+                        break;
+                    case MessageBoxResult.Cancel:
+                        System.Windows.Application.Current.Shutdown();
+                        break;
+                }
+            }
+            InitializeWindow();
+        }
 
+        private void InitializeWindow()
+        {
             FldStartTime.Focus();
             time_keeper.UpdateSelectedTime();
             time_keeper.SetStartTimeField();
             time_keeper.UpdateTimeTotals();
+        }
+        
+        private MessageBoxResult PromptForNewDatabase()
+        {
+            string messageBoxText = "The entries database could not be found in this directory.\nWould you like to create a new one?";
+            string caption = "TimeTrack - Error";
 
-            Database.CreateDatabase();
+            return MessageBox.Show(messageBoxText, caption, MessageBoxButton.OKCancel, MessageBoxImage.Error, MessageBoxResult.OK);
         }
 
-        private void ImportEntries()
+        private void LoadEntriesForDate(DateTime date)
         {
-            time_keeper.Entries = Database.Retrieve(time_keeper.Date);
-            time_keeper.CurrentIdCount = Database.CurrentIdCount(time_keeper.Date);
+            time_keeper.Entries = Database.Retrieve(date);
+            time_keeper.CurrentIdCount = Database.CurrentIdCount(date);
+            time_keeper.Date = date;
         }
 
         private void Submit()
@@ -183,6 +207,13 @@ namespace TimeTrack
             }
         }
 
+        private void BtnLoadDate(object sender, RoutedEventArgs e)
+        {
+            var date = time_keeper.Date;
+            time_keeper.CurrentDate = date.Date.ToShortDateString();
+            LoadEntriesForDate(date);
+        }
+
         private void ChkLunch_Checked(object sender, RoutedEventArgs e)
         {
             time_keeper.CaseNumberField = null;
@@ -195,11 +226,12 @@ namespace TimeTrack
 
             if (time_keeper.EndTimeField == null || time_keeper.EndTimeField == "")
             {
-                var EndLunch = TimeStringConverter.StringToTimeSpan(time_keeper.StartTimeField);
+                var EndLunch = DateTime.Today + TimeStringConverter.StringToTimeSpan(time_keeper.StartTimeField);
                 if (EndLunch != null)
                 {
-                    EndLunch = ((TimeSpan)EndLunch).Add(TimeSpan.FromHours(1));
-                    time_keeper.EndTimeField = ((TimeSpan)EndLunch).ToString();
+                    EndLunch = ((DateTime)EndLunch).AddHours(1);
+                    time_keeper.EndTimeField = ((DateTime)EndLunch).ToShortTimeString();
+                    
                 }
             }
         }
@@ -238,6 +270,7 @@ namespace TimeTrack
         {
             time_records = new ObservableCollection<TimeEntry>();
             date = DateTime.Today.Date;
+            current_date = date.Date.ToShortDateString();
             current_id_count = 0;
         }
 
@@ -258,6 +291,11 @@ namespace TimeTrack
         {
             get => time_records;
             set { time_records = value; OnPropertyChanged(); }
+        }
+        public string CurrentDate
+        {
+            get => current_date;
+            set { current_date = value; OnPropertyChanged(); }
         }
         public string StartTimeField
         {
@@ -460,6 +498,7 @@ namespace TimeTrack
         // Private vars
 
         private DateTime date;
+        private String current_date;
         private int current_id_count;
         private ObservableCollection<TimeEntry> time_records;
         private string start_time;
@@ -481,10 +520,15 @@ namespace TimeTrack
         private static string saveFileName = "TimeTrack_" + DateTime.Today.ToString("yyyy-MM-dd") + ".csv";
         private static string fullSaveFilePath = System.IO.Path.Combine(saveFilepathMonth, saveFileName);
 
-        private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
+        //private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
+        private static string databasePath = @"URI=file:timetrack.db";
 
         public const string date_format = "yyyy-MM-dd";
 
+        public static bool Exists()
+        {
+            return File.Exists(databasePath);
+        }
         public static void Update(ObservableCollection<TimeEntry> entries)
         {
             if (entries.Count > 0)
@@ -548,7 +592,7 @@ namespace TimeTrack
 
                 using (var cmd = new SQLiteCommand(dbConnection))
                 {
-                    cmd.CommandText = "SELECT * FROM time_entries WHERE date = @date";
+                    cmd.CommandText = "SELECT * FROM time_entries WHERE date = @date ORDER BY start_time ASC";
                     cmd.Parameters.AddWithValue("@date", DateToString(date));
 
                     cmd.Prepare();
@@ -602,22 +646,23 @@ namespace TimeTrack
         }
         public static void CreateDatabase()
         {
-            /* 
-                using (var con = new SQLiteConnection(databasePath))
+            using (var con = new SQLiteConnection(databasePath))
+            {
+                con.Open();
+
+                using (var cmd = new SQLiteCommand(con))
                 {
-                    con.Open();
+                    cmd.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table'";
+                    cmd.Prepare();
+                    var result = cmd.ExecuteScalar();
 
-                    using (var cmd = new SQLiteCommand(con))
-                    {
-                        cmd.CommandText = "DROP TABLE IF EXISTS time_entries";
-                        cmd.ExecuteNonQuery();
+                    if ((string)result == "time_entries")
+                        return;
 
-                        cmd.CommandText = @"CREATE TABLE time_entries(id INTEGER PRIMARY KEY, start_time TEXT, end_time TEXT, case_number TEXT, notes TEXT, recorded INTEGER)";
-                        cmd.ExecuteNonQuery();
-                    }
+                    cmd.CommandText = @"CREATE TABLE time_entries(date TEXT, id INTEGER, start_time TEXT, end_time TEXT, case_number TEXT, notes TEXT, recorded INTEGER, CONSTRAINT pk PRIMARY KEY(date, id));";
+                    cmd.ExecuteNonQuery();
                 }
-            */
-            return;
+            }
         }
         private static void CreateDirectoryStructure()
         {

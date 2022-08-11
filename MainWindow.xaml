@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TimeTrack"
         mc:Ignorable="d"
-        Title="Time Track" Height="535" Width ="605" MinWidth="600" Icon="time2.png" SizeToContent="Width">
+        Title="Time Track" Height="536" Width ="605" MinWidth="600" Icon="time2.png" SizeToContent="Width">
 
     <Window.DataContext>
         <local:TimeKeeper/>
@@ -37,7 +37,7 @@
     </Window.Resources>
 
     <Window.InputBindings>
-        <!--<KeyBinding Key="Insert" Command="{Binding SubmitCommand}" />-->
+        <!--<KeyBinding Key="Insert" Command="{Binding SubmitCommand}" -->
     </Window.InputBindings>
 
     <Grid>
@@ -46,30 +46,54 @@
             <ColumnDefinition Width="1*" MinWidth="180" MaxWidth="150"/>
         </Grid.ColumnDefinitions>
 
-        <!--Entries Window-->
-        <DataGrid 
-            Name="DgTimeRecords" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedItem}"
-            AutoGenerateColumns="False"  Grid.Column="0" Margin="12,12,12,12" 
-            HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Disabled"
-            CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
-            CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False" 
-            BorderBrush="LightCoral" BorderThickness="1" 
-            HorizontalGridLinesBrush="White" VerticalGridLinesBrush="White" AlternatingRowBackground="GhostWhite"
-            SelectionChanged="DgTimeRecords_SelectionChanged">
-
-            <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="" Width="30" Binding="{Binding Recorded, UpdateSourceTrigger=PropertyChanged}"/>
-                <DataGridTextColumn Header="Start" Width="60" Binding="{Binding StartTime, Converter={StaticResource TimeEntryUIConverter}}"/>
-                <DataGridTextColumn Header="End" Width="60" Binding="{Binding EndTime, Converter={StaticResource TimeEntryUIConverter}}"/>
-                <DataGridTextColumn Header="Case" Width="87" Binding="{Binding CaseNumber}"/>
-                <DataGridTextColumn Header="Notes" Width="138" Binding="{Binding Notes}"/>
-                
-            </DataGrid.Columns>
+        <!--Left Column-->
+        <Grid Grid.Column="0" Margin="12, 12, 12, 12">
+            <Grid.ColumnDefinitions >
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*" MaxWidth="75"/>
+            </Grid.ColumnDefinitions>
             
-            <DataGrid.InputBindings>
-                <KeyBinding Key="Delete" Command="{Binding RemoveCommand}" />
-            </DataGrid.InputBindings>
-        </DataGrid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!--Date picker-->
+
+            <TextBlock Grid.Column="0" FontWeight="SemiBold" VerticalAlignment="Center" Width="auto" Text="Date: "/>
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" Width="auto" Text="{Binding CurrentDate}"/>
+            <DatePicker Grid.Column="2" Margin="6, 0, 0, 0" Width="auto" SelectedDate="{Binding Date}"/>
+            <Button Grid.Column="3" Width="auto" Margin="6, 0, 0, 0" 
+                    Click="BtnLoadDate" ClickMode="Release">
+                Open
+            </Button>
+
+            <!--Entries Window-->
+            <DataGrid 
+                Name="DgTimeRecords" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedItem}"
+                AutoGenerateColumns="False" Grid.Row="1" Grid.ColumnSpan="4" Margin="0, 12, 0, 0"
+                HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Disabled"
+                CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
+                CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False" 
+                BorderBrush="LightCoral" BorderThickness="1" 
+                HorizontalGridLinesBrush="White" VerticalGridLinesBrush="White" AlternatingRowBackground="GhostWhite"
+                SelectionChanged="DgTimeRecords_SelectionChanged">
+
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="" Width="30" Binding="{Binding Recorded, UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="Start" Width="60" Binding="{Binding StartTime, Converter={StaticResource TimeEntryUIConverter}}"/>
+                    <DataGridTextColumn Header="End" Width="60" Binding="{Binding EndTime, Converter={StaticResource TimeEntryUIConverter}}"/>
+                    <DataGridTextColumn Header="Case" Width="87" Binding="{Binding CaseNumber}"/>
+                    <DataGridTextColumn Header="Notes" Width="138" Binding="{Binding Notes}"/>
+                </DataGrid.Columns>
+
+                <DataGrid.InputBindings>
+                    <KeyBinding Key="Delete" Command="{Binding RemoveCommand}" />
+                </DataGrid.InputBindings>
+            </DataGrid>
+        </Grid>
 
         <!--Right Column-->
         <Grid Grid.Column="1" Margin="0, 12, 12, 12">
