@@ -186,32 +186,26 @@ namespace TimeTrack
 
         }
 
-        private void BtnToggleStatus(object sender, RoutedEventArgs e)
+        private void BtnToggleAllRecorded(object sender, RoutedEventArgs e)
         {
-            if (DgTimeRecords.SelectedItem == null)
-                return;
-
             bool new_status = true;
 
-            foreach (var i in DgTimeRecords.SelectedItems)
+            foreach (var i in time_keeper.Entries)
             {
-                if (i.GetType().ToString() != "TimeTrack.TimeEntry")
-                    continue;
-
-                if (((TimeEntry)i).Recorded == true)
+                if (i.Recorded == true)
                 {
                     new_status = false;
                     break;
                 }
             }
 
-            foreach (var i in DgTimeRecords.SelectedItems)
+            foreach (var i in time_keeper.Entries)
             {
-                if (i.GetType().ToString() != "TimeTrack.TimeEntry")
+                if (new_status && string.IsNullOrEmpty(i.CaseNumber.Trim()))
                     continue;
-
-                ((TimeEntry)i).Recorded = new_status;
+                i.Recorded = new_status;
             }
+            Database.Update(time_keeper.Entries);
         }
 
         private void BtnLoadDate(object sender, RoutedEventArgs e)
@@ -600,7 +594,7 @@ namespace TimeTrack
 
                 using (var cmd = new SQLiteCommand(dbConnection))
                 {
-                    cmd.CommandText = "SELECT * FROM time_entries WHERE date = @date ORDER BY start_time ASC";
+                    cmd.CommandText = "SELECT * FROM time_entries WHERE date = @date ORDER BY start_time ASC, end_time ASC, id ASC";
                     cmd.Parameters.AddWithValue("@date", DateToString(date));
 
                     cmd.Prepare();
