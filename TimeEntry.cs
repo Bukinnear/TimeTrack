@@ -151,15 +151,4 @@ namespace TimeTrack
         }
     }
 
-    public class TimeEntryCSVMap : ClassMap<TimeEntry>
-    {
-        public TimeEntryCSVMap()
-        {
-            Map(m => m.StartTime).Name("StartTime");
-            Map(m => m.EndTime).Name("EndTime");
-            Map(m => m.CaseNumber).Name("CaseNumber");
-            Map(m => m.Recorded).Name("Recorded");
-            Map(m => m.Notes).Name("Notes");
-        }
-    }
 }

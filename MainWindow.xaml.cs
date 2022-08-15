@@ -286,8 +286,6 @@ namespace TimeTrack
         {
             set => current_id_count = value;
         }
-        public string CSVName => "TimeTrack_" + Date.ToString("yyyy-MM-dd") + ".csv";
-
         public ObservableCollection<TimeEntry> Entries
         {
             get => time_records;
@@ -516,14 +514,9 @@ namespace TimeTrack
 
     class Database
     {
-        private static string saveFilepathYear = DateTime.Today.ToString("yyyy");
-        private static string saveFilepathMonth = System.IO.Path.Combine(saveFilepathYear, DateTime.Today.ToString("MM"));
-        private static string saveFileName = "TimeTrack_" + DateTime.Today.ToString("yyyy-MM-dd") + ".csv";
-        private static string fullSaveFilePath = System.IO.Path.Combine(saveFilepathMonth, saveFileName);
-
-        private static string databasePath = "timetrack.db";
+        private const string databasePath = "timetrack.db";
         //private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
-        private static string databaseURI = @"URI=file:" + databasePath;
+        private const string databaseURI = @"URI=file:" + databasePath;
 
         public const string date_format = "yyyy-MM-dd";
 
@@ -664,17 +657,6 @@ namespace TimeTrack
                     cmd.CommandText = @"CREATE TABLE time_entries(date TEXT, id INTEGER, start_time TEXT, end_time TEXT, case_number TEXT, notes TEXT, recorded INTEGER, CONSTRAINT pk PRIMARY KEY(date, id));";
                     cmd.ExecuteNonQuery();
                 }
-            }
-        }
-        private static void CreateDirectoryStructure()
-        {
-            if (!File.Exists(fullSaveFilePath))
-            {
-                if (!Directory.Exists(saveFilepathYear))
-                    Directory.CreateDirectory(saveFilepathYear);
-
-                if (!Directory.Exists(saveFilepathMonth))
-                    Directory.CreateDirectory(saveFilepathMonth);
             }
         }
         private static string DateToString(DateTime date)
