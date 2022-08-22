@@ -283,7 +283,8 @@ namespace TimeTrack
         public ObservableCollection<TimeEntry> Entries
         {
             get => time_records;
-            set { time_records = value; OnPropertyChanged(); }
+            //set { time_records = value; OnPropertyChanged(); }
+            set { time_records = value; OnPropertyChanged(); AddChangedHandlerToAllEntries(); }
         }
         public string CurrentDate
         {
@@ -447,6 +448,14 @@ namespace TimeTrack
                 StartTimeField = time_records.Last<TimeEntry>().EndTimeAsString();
             else
                 StartTimeField = null;
+        }
+
+        public void AddChangedHandlerToAllEntries()
+        {
+            foreach (var entry in time_records)
+            {
+                ((TimeEntry)entry).TimeEntryChanged += OnTimeEntryChanged;
+            }
         }
 
         public void OnTimeEntryChanged(bool time_changed)
