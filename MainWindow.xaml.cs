@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
@@ -507,150 +508,135 @@ namespace TimeTrack
 
     class Database
     {
-        private const string databasePath = "timetrack.db";
-        //private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
-        private const string databaseURI = @"URI=file:" + databasePath;
-
+        // Public variables
         public const string date_format = "yyyy-MM-dd";
 
+        //Public functions
         public static bool Exists()
         {
             return File.Exists(databasePath);
         }
-        public static void Update(ObservableCollection<TimeEntry> entries)
+        public static void CreateDatabase()
         {
-            if (entries.Count > 0)
-            {
-                // Write to database
-                using (var dbConnection = new SQLiteConnection(databaseURI))
-                {
-                    dbConnection.Open();
+            Connect();
+            cmd.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table'";
+            cmd.Prepare();
+            var result = cmd.ExecuteScalar();
 
-                    using (var cmd = new SQLiteCommand(dbConnection))
-                    {
-                        for (int i = 0; i < entries.Count; i++)
-                        {
-                            try
-                            {
-                                cmd.CommandText = "INSERT OR REPLACE INTO time_entries(date, id, start_time, end_time, case_number, notes, recorded) " +
-                                    "VALUES(@date, @id, @start_time, @end_time, @case_number, @notes, @recorded)";
-                                cmd.Parameters.AddWithValue("@date", DateToString(entries[i].Date));
-                                cmd.Parameters.AddWithValue("@id", entries[i].ID);
-                                cmd.Parameters.AddWithValue("@start_time", entries[i].StartTime);
-                                cmd.Parameters.AddWithValue("@end_time", entries[i].EndTime);
-                                cmd.Parameters.AddWithValue("@case_number", entries[i].CaseNumber);
-                                cmd.Parameters.AddWithValue("@notes", entries[i].Notes);
-                                cmd.Parameters.AddWithValue("@recorded", entries[i].Recorded);
+            if ((string)result == "time_entries")
+                return;
 
-                                cmd.Prepare();
-                                cmd.ExecuteNonQuery();
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine("FAILED INSERT:" + e.Message);
-                                throw e;
-                            }
-                        }
-                    }
-                }
-            }
+            cmd.CommandText = @"CREATE TABLE time_entries(date TEXT, id INTEGER, start_time TEXT, end_time TEXT, case_number TEXT, notes TEXT, recorded INTEGER, CONSTRAINT pk PRIMARY KEY(date, id));";
+            cmd.ExecuteNonQuery();
+            Close();
         }
-        public static void Delete(DateTime date, int id)
+        public static int CurrentIdCount(DateTime date)
         {
-            using (var dbConnection = new SQLiteConnection(databaseURI))
+            Connect();
+            cmd.CommandText = "SELECT MAX(id) FROM time_entries WHERE date = @date;";
+            cmd.Parameters.AddWithValue("@date", DateToString(date));
+            
+            cmd.Prepare();
+            var query = cmd.ExecuteReader();
+            if (!query.Read() || query.IsDBNull(0))
             {
-                dbConnection.Open();
-
-                using (var cmd = new SQLiteCommand(dbConnection))
-                {
-                    cmd.CommandText = "DELETE FROM time_entries WHERE date = @date";
-                    cmd.Parameters.AddWithValue("@date", DateToString(date));
-                    cmd.Prepare();
-                    cmd.ExecuteNonQuery();
-                }
+                Close();
+                return 0;
             }
+
+            Close();
+            return query.GetInt32(0);
         }
         public static ObservableCollection<TimeEntry> Retrieve(DateTime date)
         {
             var return_val = new ObservableCollection<TimeEntry>();
+            
+            Connect();            
+            cmd.CommandText = "SELECT * FROM time_entries WHERE date = @date ORDER BY start_time ASC, end_time ASC, id ASC";
+            cmd.Parameters.AddWithValue("@date", DateToString(date));
 
-            using (var dbConnection = new SQLiteConnection(databaseURI))
+            cmd.Prepare();
+            var query = cmd.ExecuteReader();
+
+            while (query.Read())
             {
-                dbConnection.Open();
+                var out_date = StringToDate(query.GetString(0));
+                var id = query.GetInt32(1);
+                int recorded = query.GetInt32(6);
 
-                using (var cmd = new SQLiteCommand(dbConnection))
-                {
-                    cmd.CommandText = "SELECT * FROM time_entries WHERE date = @date ORDER BY start_time ASC, end_time ASC, id ASC";
-                    cmd.Parameters.AddWithValue("@date", DateToString(date));
-
-                    cmd.Prepare();
-                    var query = cmd.ExecuteReader();
-
-                    while (query.Read())
-                    {
-                        var out_date = StringToDate(query.GetString(0));
-                        var id = query.GetInt32(1);
-                        int recorded = query.GetInt32(6);
-
-                        TimeSpan? start_time = null;
-                        TimeSpan? end_time = null;
-                        string case_no = "";
-                        string notes = "";
+                TimeSpan? start_time = null;
+                TimeSpan? end_time = null;
+                string case_no = "";
+                string notes = "";
                         
 
-                        if (!query.IsDBNull(2))
-                            start_time = StringToTimeSpan(query.GetString(2));
-                        if (!query.IsDBNull(3))
-                            end_time = StringToTimeSpan(query.GetString(3));
-                        if (!query.IsDBNull(4))
-                            case_no = query.GetString(4);
-                        if (!query.IsDBNull(5))
-                            notes = query.GetString(5);
+                if (!query.IsDBNull(2))
+                    start_time = StringToTimeSpan(query.GetString(2));
+                if (!query.IsDBNull(3))
+                    end_time = StringToTimeSpan(query.GetString(3));
+                if (!query.IsDBNull(4))
+                    case_no = query.GetString(4);
+                if (!query.IsDBNull(5))
+                    notes = query.GetString(5);
 
-                        return_val.Add(new TimeEntry(out_date, id, start_time, end_time, case_no, notes, Convert.ToBoolean(recorded)));
-                    }
-
-                    return return_val;
-                }
+                return_val.Add(new TimeEntry(out_date, id, start_time, end_time, case_no, notes, Convert.ToBoolean(recorded)));
             }
+            Close();
+
+            return return_val;
         }
-        public static int CurrentIdCount(DateTime date)
+        public static void Update(ObservableCollection<TimeEntry> entries)
         {
-            using (var dbConnection = new SQLiteConnection(databaseURI))
+            if (entries.Count < 1)
+                return;
+
+            Connect();
+            for (int i = 0; i < entries.Count; i++)
             {
-                dbConnection.Open();
-
-                using (var cmd = new SQLiteCommand(dbConnection))
+                try
                 {
-                    cmd.CommandText = "SELECT MAX(id) FROM time_entries WHERE date = @date;";
-                    cmd.Parameters.AddWithValue("@date", DateToString(date));
+                    cmd.CommandText = "INSERT OR REPLACE INTO time_entries(date, id, start_time, end_time, case_number, notes, recorded) " +
+                        "VALUES(@date, @id, @start_time, @end_time, @case_number, @notes, @recorded)";
+                    cmd.Parameters.AddWithValue("@date", DateToString(entries[i].Date));
+                    cmd.Parameters.AddWithValue("@id", entries[i].ID);
+                    cmd.Parameters.AddWithValue("@start_time", entries[i].StartTime);
+                    cmd.Parameters.AddWithValue("@end_time", entries[i].EndTime);
+                    cmd.Parameters.AddWithValue("@case_number", entries[i].CaseNumber);
+                    cmd.Parameters.AddWithValue("@notes", entries[i].Notes);
+                    cmd.Parameters.AddWithValue("@recorded", entries[i].Recorded);
+
                     cmd.Prepare();
-                    var query = cmd.ExecuteReader();
-                    if (!query.Read() || query.IsDBNull(0))
-                        return 0;
-                    return query.GetInt32(0);
-                }
-            }
-        }
-        public static void CreateDatabase()
-        {
-            using (var con = new SQLiteConnection(databaseURI))
-            {
-                con.Open();
-
-                using (var cmd = new SQLiteCommand(con))
-                {
-                    cmd.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table'";
-                    cmd.Prepare();
-                    var result = cmd.ExecuteScalar();
-
-                    if ((string)result == "time_entries")
-                        return;
-
-                    cmd.CommandText = @"CREATE TABLE time_entries(date TEXT, id INTEGER, start_time TEXT, end_time TEXT, case_number TEXT, notes TEXT, recorded INTEGER, CONSTRAINT pk PRIMARY KEY(date, id));";
                     cmd.ExecuteNonQuery();
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine("FAILED INSERT:" + e.Message);
+                    throw e;
+                }
             }
+            Close();
+        }
+        public static void Delete(DateTime date, int id)
+        {
+            Connect();
+            cmd.CommandText = "DELETE FROM time_entries WHERE date = @date";
+            cmd.Parameters.AddWithValue("@date", DateToString(date));
+            cmd.Prepare();
+            cmd.ExecuteNonQuery();
+            Close();
+        }
+
+        // Private functions
+        private static void Connect()
+        {
+            connection = new SQLiteConnection(databaseURI);
+            connection.Open();
+            cmd = connection.CreateCommand();
+        }
+        private static void Close()
+        {
+            cmd.Dispose();
+            connection.Dispose();
         }
         private static string DateToString(DateTime date)
         {
@@ -665,6 +651,12 @@ namespace TimeTrack
             return TimeSpan.ParseExact(str, "c", CultureInfo.InvariantCulture, TimeSpanStyles.None);
         }
 
+        // Private variables
+        private const string databasePath = "timetrack.db";
+        //private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
+        private const string databaseURI = @"URI=file:" + databasePath;
+        private static SQLiteConnection connection;
+        private static SQLiteCommand cmd;
     }
 
     public static class TimeStringConverter
