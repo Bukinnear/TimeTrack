@@ -102,7 +102,7 @@ namespace TimeTrack
 
             bool retry;
             int retry_count = 0;
-            int max_retries = 30;
+            int max_retries = 4;
 
             do
             {
@@ -115,13 +115,6 @@ namespace TimeTrack
                 {
                     try
                     {
-                        if (!Clipboard.ContainsText(TextDataFormat.UnicodeText))
-                        {
-                            retry = true;
-                            retry_count++;
-                            continue;
-                        }
-
                         var clipboard_contents = Clipboard.GetText(TextDataFormat.UnicodeText);
                         if (!(clipboard_contents == text))
                         {
