@@ -98,43 +98,17 @@ namespace TimeTrack
             if (DgTimeRecords.SelectedItem == null)
                 return;
 
-            TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
-            string text = selected.StartTimeAsString() + " - " + selected.EndTimeAsString() + "\n" + selected.Notes;
-
-            bool retry;
-            int retry_count = 0;
-            int max_retries = 4;
-
-            do
+            try
             {
-                retry = false;
-                try
-                {
-                    Clipboard.SetData(DataFormats.UnicodeText, text);
-                }
-                catch
-                {
-                    try
-                    {
-                        var clipboard_contents = Clipboard.GetText(TextDataFormat.UnicodeText);
-                        if (!(clipboard_contents == text))
-                        {
-                            retry = true;
-                            retry_count++;
-                        }
-                    }
-                    catch
-                    {
-                        retry = true;
-                        retry_count++;
-                    }
-                }
-            } while (retry && retry_count < max_retries);
-
-            if (!retry)
-            {
+                TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
+                string text = selected.StartTimeAsString() + " - " + selected.EndTimeAsString() + "\n" + selected.Notes;
+                Clipboard.SetData(DataFormats.UnicodeText, text);
                 selected.Recorded = true;
                 Database.Update(time_keeper.Entries);
+            }
+            catch (Exception e0)
+            {
+                Error.Handle("Something went wrong during export", e0);
             }
         }
 
@@ -143,41 +117,49 @@ namespace TimeTrack
             if (DgTimeRecords.Items.IsEmpty)
                 return;
 
-            string path = "C:\\temp\\_time_export.csv";
-            if (File.Exists(path))
-                File.Delete(path);
-
-            string[] output = new string[DgTimeRecords.Items.Count];
-            var all_records = DgTimeRecords.Items;
-
-            for (int i = 0; i < all_records.Count; i++)
+            try
             {
-                TimeEntry entry = all_records[i] as TimeEntry;
+                string path = "C:\\temp\\_time_export.csv";
+                if (File.Exists(path))
+                    File.Delete(path);
 
-                if (entry.Recorded)
-                    continue;
-                if (string.IsNullOrEmpty(entry.CaseNumber.Trim()))
-                    continue;
+                string[] output = new string[DgTimeRecords.Items.Count];
+                var all_records = DgTimeRecords.Items;
 
-                string case_number = entry.CaseNumber.Trim();
-                string hours = entry.Hours().ToString();
-                string minutes = entry.Minutes().ToString();
-                string time_period = entry.StartTimeAsString() + " - " + entry.EndTimeAsString();
+                for (int i = 0; i < all_records.Count; i++)
+                {
+                    TimeEntry entry = all_records[i] as TimeEntry;
 
-                output[i] = case_number + "," + hours + "," + minutes + "," + time_period + "," + entry.Notes;
-            }
-            File.WriteAllLines(path, output);
+                    if (entry.Recorded)
+                        continue;
+                    if (null == entry.CaseNumber)
+                        continue;
+                    if (entry.CaseNumber.Trim() == "")
+                        continue;
 
-            foreach (var i in DgTimeRecords.Items)
+                    string case_number = entry.CaseNumber.Trim();
+                    string hours = entry.Hours().ToString();
+                    string minutes = entry.Minutes().ToString();
+                    string time_period = entry.StartTimeAsString() + " - " + entry.EndTimeAsString();
+
+                    output[i] = case_number + "," + hours + "," + minutes + "," + time_period + "," + entry.Notes;
+                }
+                File.WriteAllLines(path, output);
+
+                foreach (var i in DgTimeRecords.Items)
+                {
+                    var entry = i as TimeEntry;
+                    if (string.IsNullOrEmpty(entry.CaseNumber.Trim()))
+                        continue;
+                    entry.Recorded = true;
+                }
+            } 
+            catch (Exception exc)
             {
-                var entry = i as TimeEntry;
-                if (string.IsNullOrEmpty(entry.CaseNumber.Trim()))
-                    continue;
-                entry.Recorded = true;
+                Error.Handle("Something went wrong while exporting all entries", exc);
             }
 
             Database.Update(time_keeper.Entries);
-
         }
 
         private void BtnToggleAllRecorded(object sender, RoutedEventArgs e)
@@ -283,7 +265,6 @@ namespace TimeTrack
         public ObservableCollection<TimeEntry> Entries
         {
             get => time_records;
-            //set { time_records = value; OnPropertyChanged(); }
             set { time_records = value; OnPropertyChanged(); AddChangedHandlerToAllEntries(); }
         }
         public string CurrentDate
@@ -545,53 +526,70 @@ namespace TimeTrack
             cmd.CommandText = "SELECT MAX(id) FROM time_entries WHERE date = @date;";
             cmd.Parameters.AddWithValue("@date", DateToString(date));
             
-            cmd.Prepare();
-            var query = cmd.ExecuteReader();
-            if (!query.Read() || query.IsDBNull(0))
+            int return_result = 0;
+            try
+            {
+                cmd.Prepare();
+                var query = cmd.ExecuteReader();
+
+                while (query.Read() && !query.IsDBNull(0))
+                    return_result = query.GetInt32(0);
+                query.Close();
+            }
+            catch (Exception e)
             {
                 Close();
-                return 0;
+                Error.Handle("Could not get current entry index.", e);
+                throw e;
             }
-
+            
             Close();
-            return query.GetInt32(0);
+            return return_result;
         }
         public static ObservableCollection<TimeEntry> Retrieve(DateTime date)
         {
+            Connect();
             var return_val = new ObservableCollection<TimeEntry>();
             
-            Connect();            
             cmd.CommandText = "SELECT * FROM time_entries WHERE date = @date ORDER BY start_time ASC, end_time ASC, id ASC";
             cmd.Parameters.AddWithValue("@date", DateToString(date));
 
-            cmd.Prepare();
-            var query = cmd.ExecuteReader();
-
-            while (query.Read())
+            try
             {
-                var out_date = StringToDate(query.GetString(0));
-                var id = query.GetInt32(1);
-                int recorded = query.GetInt32(6);
+                cmd.Prepare();
+                var query = cmd.ExecuteReader();
 
-                TimeSpan? start_time = null;
-                TimeSpan? end_time = null;
-                string case_no = "";
-                string notes = "";
+                while (query.Read())
+                {
+                    var out_date = StringToDate(query.GetString(0));
+                    var id = query.GetInt32(1);
+                    int recorded = query.GetInt32(6);
+
+                    TimeSpan? start_time = null;
+                    TimeSpan? end_time = null;
+                    string case_no = "";
+                    string notes = "";
                         
 
-                if (!query.IsDBNull(2))
-                    start_time = StringToTimeSpan(query.GetString(2));
-                if (!query.IsDBNull(3))
-                    end_time = StringToTimeSpan(query.GetString(3));
-                if (!query.IsDBNull(4))
-                    case_no = query.GetString(4);
-                if (!query.IsDBNull(5))
-                    notes = query.GetString(5);
+                    if (!query.IsDBNull(2))
+                        start_time = StringToTimeSpan(query.GetString(2));
+                    if (!query.IsDBNull(3))
+                        end_time = StringToTimeSpan(query.GetString(3));
+                    if (!query.IsDBNull(4))
+                        case_no = query.GetString(4);
+                    if (!query.IsDBNull(5))
+                        notes = query.GetString(5);
 
-                return_val.Add(new TimeEntry(out_date, id, start_time, end_time, case_no, notes, Convert.ToBoolean(recorded)));
+                    return_val.Add(new TimeEntry(out_date, id, start_time, end_time, case_no, notes, Convert.ToBoolean(recorded)));
+                }
+            } 
+            catch (Exception e)
+            {
+                Close();
+                Error.Handle("Something went wrong while retrieving today's entries.", e);
+                throw e;
             }
             Close();
-
             return return_val;
         }
         public static void Update(ObservableCollection<TimeEntry> entries)
@@ -602,25 +600,24 @@ namespace TimeTrack
             Connect();
             for (int i = 0; i < entries.Count; i++)
             {
+                cmd.CommandText = "INSERT OR REPLACE INTO time_entries(date, id, start_time, end_time, case_number, notes, recorded) " +
+                    "VALUES(@date, @id, @start_time, @end_time, @case_number, @notes, @recorded)";
+                cmd.Parameters.AddWithValue("@date", DateToString(entries[i].Date));
+                cmd.Parameters.AddWithValue("@id", entries[i].ID);
+                cmd.Parameters.AddWithValue("@start_time", entries[i].StartTime);
+                cmd.Parameters.AddWithValue("@end_time", entries[i].EndTime);
+                cmd.Parameters.AddWithValue("@case_number", entries[i].CaseNumber);
+                cmd.Parameters.AddWithValue("@notes", entries[i].Notes);
+                cmd.Parameters.AddWithValue("@recorded", entries[i].Recorded);
+
                 try
                 {
-                    cmd.CommandText = "INSERT OR REPLACE INTO time_entries(date, id, start_time, end_time, case_number, notes, recorded) " +
-                        "VALUES(@date, @id, @start_time, @end_time, @case_number, @notes, @recorded)";
-                    cmd.Parameters.AddWithValue("@date", DateToString(entries[i].Date));
-                    cmd.Parameters.AddWithValue("@id", entries[i].ID);
-                    cmd.Parameters.AddWithValue("@start_time", entries[i].StartTime);
-                    cmd.Parameters.AddWithValue("@end_time", entries[i].EndTime);
-                    cmd.Parameters.AddWithValue("@case_number", entries[i].CaseNumber);
-                    cmd.Parameters.AddWithValue("@notes", entries[i].Notes);
-                    cmd.Parameters.AddWithValue("@recorded", entries[i].Recorded);
-
                     cmd.Prepare();
                     cmd.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("FAILED INSERT:" + e.Message);
-                    throw e;
+                    Error.Handle("Something went wrong while updating the entries database.\nThe saved records may not be consistent with what is displayed.", e);
                 }
             }
             Close();
@@ -630,22 +627,39 @@ namespace TimeTrack
             Connect();
             cmd.CommandText = "DELETE FROM time_entries WHERE date = @date";
             cmd.Parameters.AddWithValue("@date", DateToString(date));
-            cmd.Prepare();
-            cmd.ExecuteNonQuery();
+            try
+            {
+                cmd.Prepare();
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception e)
+            {
+                Error.Handle("Could not delete the record from the database.\nThe saved records may not consistent with what is displayed.", e);
+            }
             Close();
         }
 
         // Private functions
         private static void Connect()
         {
-            connection = new SQLiteConnection(databaseURI);
-            connection.Open();
-            cmd = connection.CreateCommand();
+            try
+            {
+                connection = new SQLiteConnection(databaseURI);
+                connection.Open();
+                cmd = connection.CreateCommand();
+            }
+            catch (Exception e)
+            {
+                Error.Handle("Could not open a connection to the database.", e);
+                throw e;
+            }
+            Console.WriteLine("Opened");
         }
         private static void Close()
         {
-            cmd.Dispose();
+            connection.Close();
             connection.Dispose();
+            Console.WriteLine("Closed");
         }
         private static string DateToString(DateTime date)
         {
@@ -662,10 +676,23 @@ namespace TimeTrack
 
         // Private variables
         private const string databasePath = "timetrack.db";
-        //private static string databasePath = @"URI=file:C:\\temp\\test\\test.db";
         private const string databaseURI = @"URI=file:" + databasePath;
         private static SQLiteConnection connection;
         private static SQLiteCommand cmd;
+    }
+
+    public static class Error
+    {
+        public static void Handle(string error_text, Exception e, [CallerLineNumber] int line_number = 0, [CallerMemberName] string caller = null)
+        {
+            string caption = "TimeTrack - Error";
+            string messageBoxText = error_text + "\n" + "\nFunction name: " + caller + "\nLine number: " + line_number + "\n\nException details:\n" + e.Message;
+
+            MessageBox.Show(messageBoxText, caption, MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+
+            string log_text = DateTime.Now.ToLocalTime() + "," + caller + "," + e.Message.Replace("\r", "").Replace("\n"," | ") + "," + error_text.Replace("\n", " | ");
+            File.AppendAllText("time_track_log.txt", log_text);
+        }
     }
 
     public static class TimeStringConverter

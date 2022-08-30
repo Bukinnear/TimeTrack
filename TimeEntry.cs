@@ -68,7 +68,6 @@ namespace TimeTrack
                 var old_val = case_number;
                 case_number = value; 
                 OnPropertyChanged();
-
                 // if the previous value was empty/null and is no longer, or visav-versa
                 if (((old_val == "" || old_val == null) && (case_number != "" || case_number != null)) ||
                     ((old_val != "" || old_val != null) && (case_number == "" || case_number == null)))
