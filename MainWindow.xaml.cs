@@ -130,11 +130,7 @@ namespace TimeTrack
                 {
                     TimeEntry entry = all_records[i] as TimeEntry;
 
-                    if (entry.Recorded)
-                        continue;
-                    if (null == entry.CaseNumber)
-                        continue;
-                    if (entry.CaseNumber.Trim() == "")
+                    if (entry.Recorded || entry.CaseIsEmpty())
                         continue;
 
                     string case_number = entry.CaseNumber.Trim();
@@ -149,7 +145,7 @@ namespace TimeTrack
                 foreach (var i in DgTimeRecords.Items)
                 {
                     var entry = i as TimeEntry;
-                    if (string.IsNullOrEmpty(entry.CaseNumber.Trim()))
+                    if (entry.CaseIsEmpty())
                         continue;
                     entry.Recorded = true;
                 }

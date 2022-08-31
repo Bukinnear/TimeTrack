@@ -100,6 +100,10 @@ namespace TimeTrack
             return (DateTime.Today + (TimeSpan)end_time).ToString("h:mm tt");
 
         }
+        public bool CaseIsEmpty()
+        {
+            return (case_number == null || case_number.Trim() == "");
+        }
         public int Hours()
         {
             if (start_time == null || end_time == null)
