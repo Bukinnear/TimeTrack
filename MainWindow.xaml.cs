@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Data.Common;
 using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -22,6 +22,27 @@ namespace TimeTrack
 
         public MainWindow()
         {
+            // Load the SQLite assembly
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                string assemblyName = new AssemblyName(args.Name).Name;
+                if (assemblyName.EndsWith(".resources"))
+                    return null;
+
+                string dllName = assemblyName + ".dll";
+                string dllFullPath = Path.Combine(Path.GetTempPath(), dllName);
+
+                using (Stream s = Assembly.GetEntryAssembly().GetManifestResourceStream(typeof(MainWindow).Namespace + ".Resources." + dllName))
+                {
+                    byte[] data = new byte[s.Length];
+                    s.Read(data, 0, data.Length);
+
+                    File.WriteAllBytes(dllFullPath, data);
+                }
+
+                return Assembly.LoadFrom(dllFullPath);
+            };
+            
             InitializeComponent();
             time_keeper = DataContext as TimeKeeper;
 

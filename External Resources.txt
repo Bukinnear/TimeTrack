@@ -26,5 +26,8 @@
  * 
  * SQLite in C#
  * https://zetcode.com/csharp/sqlite/
- * 
+ *
+ * Embedding dll into project
+ * https://stackoverflow.com/questions/5381708/ilmerge-alternative-how-to-embed-application-s-dependent-dlls-inside-an-exe-fil/10600046#10600046
+ * https://www.c-sharpcorner.com/uploadfile/40e97e/saving-an-embedded-file-in-C-Sharp/
  */
