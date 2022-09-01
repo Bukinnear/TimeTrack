@@ -18,6 +18,7 @@ namespace TimeTrack
     public partial class MainWindow : Window
     {
         private TimeKeeper time_keeper;
+        private Brush BtnBrush;
 
         public MainWindow()
         {
@@ -39,6 +40,7 @@ namespace TimeTrack
                 }
             }
             InitializeWindow();
+            BtnBrush = BtnSub.Background;
         }
 
         private void InitializeWindow()
@@ -180,11 +182,36 @@ namespace TimeTrack
             Database.Update(time_keeper.Entries);
         }
 
-        private void BtnLoadDate(object sender, RoutedEventArgs e)
+        private void CalLoadDate(object sender, RoutedEventArgs e)
         {
+            if (time_keeper == null)
+                return;
+
             var date = time_keeper.Date;
             time_keeper.CurrentDate = date.Date.ToShortDateString();
+
+            if (date != DateTime.Today)
+            {
+                txtCurrentDate.Background = Brushes.OrangeRed;
+                txtCurrentDate.Foreground = Brushes.White;
+                BtnSub.Background = Brushes.OrangeRed;
+                BtnSub.Foreground = Brushes.White;
+                BtnToday.IsEnabled = true;
+            } else {
+                txtCurrentDate.Background = null;
+                txtCurrentDate.Foreground = Brushes.Black;
+                BtnSub.Background = BtnBrush;
+                BtnSub.Foreground = Brushes.Black;
+                BtnToday.IsEnabled = false;
+            }
+
             LoadEntriesForDate(date);
+        }
+
+        private void BtnGotoToday(object sender, RoutedEventArgs e)
+        {
+            CalDate.SelectedDate = DateTime.Today;
+
         }
 
         private void ChkLunch_Checked(object sender, RoutedEventArgs e)
