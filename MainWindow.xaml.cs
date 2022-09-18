@@ -227,12 +227,14 @@ namespace TimeTrack
             }
 
             LoadEntriesForDate(date);
+            time_keeper.UpdateTimeTotals();
+            time_keeper.UpdateSelectedTime();
+            time_keeper.SetStartTimeField();
         }
 
         private void BtnGotoToday(object sender, RoutedEventArgs e)
         {
             CalDate.SelectedDate = DateTime.Today;
-
         }
 
         private void ChkLunch_Checked(object sender, RoutedEventArgs e)
