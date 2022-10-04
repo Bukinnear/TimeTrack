@@ -157,11 +157,12 @@ namespace TimeTrack
                         continue;
 
                     string case_number = entry.CaseNumber.Trim();
+                    string date = entry.Date.ToShortDateString().Replace("/", "-");
                     string hours = entry.Hours().ToString();
                     string minutes = entry.Minutes().ToString();
                     string time_period = entry.StartTimeAsString() + " - " + entry.EndTimeAsString();
 
-                    output[i] = case_number + "," + hours + "," + minutes + "," + time_period + "," + entry.Notes;
+                    output[i] = case_number + "," + date + "," + hours + "," + minutes + "," + time_period + "," + entry.Notes;
                 }
                 File.WriteAllLines(path, output);
 
