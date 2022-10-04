@@ -162,6 +162,9 @@ namespace TimeTrack
                     string minutes = entry.Minutes().ToString();
                     string time_period = entry.StartTimeAsString() + " - " + entry.EndTimeAsString();
 
+                    if (date[1] == '-')
+                        date = "0" + date;
+
                     output[i] = case_number + "," + date + "," + hours + "," + minutes + "," + time_period + "," + entry.Notes;
                 }
                 File.WriteAllLines(path, output);
