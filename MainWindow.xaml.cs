@@ -123,15 +123,31 @@ namespace TimeTrack
 
             try
             {
+                // "{date} {time},{hours_worked},{comment}"
+
                 TimeEntry selected = (TimeEntry)DgTimeRecords.SelectedItem;
-                string text = selected.StartTimeAsString() + " - " + selected.EndTimeAsString() + "\n" + selected.Notes;
+
+                if (selected.StartTime == null || selected.EndTime == null)
+                    throw new Exception("Record must have a valid start and end time");
+
+                if (selected.EndTime < selected.StartTime)
+                    throw new Exception("Cannot export a negative time duration");
+                
+                string date_time = selected.Date.ToString("yyyy-MM-dd") + " " + selected.StartTime.ToString();
+                
+                TimeSpan timespan_worked = (TimeSpan)(selected.EndTime - selected.StartTime);
+                int hours_worked = timespan_worked.Hours;
+                double minutes_worked = timespan_worked.Minutes;
+                double time_worked = hours_worked + (Math.Ceiling((minutes_worked / 60) * 10) / 10);
+
+                string text = date_time + "," + time_worked + "," + selected.Notes;
                 Clipboard.SetData(DataFormats.UnicodeText, text);
                 selected.Recorded = true;
                 Database.Update(time_keeper.Entries);
             }
             catch (Exception e0)
             {
-                Error.Handle("Something went wrong during export", e0);
+                Error.Handle("An error occurred during export", e0);
             }
         }
 
@@ -713,13 +729,11 @@ namespace TimeTrack
                 Error.Handle("Could not open a connection to the database.", e);
                 throw e;
             }
-            Console.WriteLine("Opened");
         }
         private static void Close()
         {
             connection.Close();
             connection.Dispose();
-            Console.WriteLine("Closed");
         }
         private static string DateToString(DateTime date)
         {
