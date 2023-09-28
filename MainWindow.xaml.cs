@@ -241,6 +241,16 @@ namespace TimeTrack
             CalDate.SelectedDate = DateTime.Today;
         }
 
+        private void BtnGoForward(object sender, RoutedEventArgs e)
+        {
+            CalDate.SelectedDate += TimeSpan.FromDays(1);
+        }
+
+        private void BtnGoBack(object sender, RoutedEventArgs e)
+        {
+            CalDate.SelectedDate -= TimeSpan.FromDays(1);
+        }
+
         private void ChkLunch_Checked(object sender, RoutedEventArgs e)
         {
             time_keeper.CaseNumberField = null;

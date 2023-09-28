@@ -47,33 +47,55 @@
         </Grid.ColumnDefinitions>
 
         <!--Left Column-->
-        <Grid Grid.Column="0" Margin="12, 12, 12, 12">
+        <Grid Grid.Column="0" Margin="0, 0, 0, 0">
             <Grid.ColumnDefinitions >
-                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="auto"/>
-                <ColumnDefinition Width="*" MaxWidth="50"/>
             </Grid.ColumnDefinitions>
-            
+
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            
-            <!--Date picker-->
 
-            <TextBlock Grid.Column="0" FontWeight="SemiBold" VerticalAlignment="Center" Width="auto" Text="Date: "/>
-            <TextBlock Name="txtCurrentDate"  Grid.Column="1" VerticalAlignment="Center" Width="auto" Text="{Binding CurrentDate}"/>
-            <DatePicker Name="CalDate"  Grid.Column="2" Margin="6, 0, 0, 0" Width="auto" SelectedDate="{Binding Date}" SelectedDateChanged="CalLoadDate"/>
-            <Button Name="BtnToday" Grid.Column="3" Width="auto" Margin="6, 0, 0, 0" 
-                    Click="BtnGotoToday" ClickMode="Release" IsEnabled="False">
-                Today
-            </Button>
+            <!--Date picker-->
+            <Grid Grid.Row="0" Margin="12, 12, 12, 0">
+                <Grid.ColumnDefinitions >
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*" MaxWidth="30"/>
+                    <ColumnDefinition Width="*" MaxWidth="70"/>
+                    <ColumnDefinition Width="*" MaxWidth="30"/>
+                </Grid.ColumnDefinitions>
+            
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>            
+
+                <TextBlock Grid.Column="0" FontWeight="SemiBold" VerticalAlignment="Center" Width="auto" Text="Date: "/>
+                <TextBlock Name="txtCurrentDate"  Grid.Column="1" VerticalAlignment="Center" Width="auto" Text="{Binding CurrentDate}"/>
+                <DatePicker Name="CalDate"  Grid.Column="2" Margin="6, 0, 0, 0" Width="auto" SelectedDate="{Binding Date}" SelectedDateChanged="CalLoadDate"/>
+
+                <Button Name="BtnBack" Grid.Column="3" Width="auto" Margin="6, 0, 0, 0" 
+                        Click="BtnGoBack" ClickMode="Release" IsEnabled="True">
+                    ←
+                </Button>
+
+                <Button Name="BtnToday" Grid.Column="4" Width="auto" Margin="3, 0, 0, 0" 
+                        Click="BtnGotoToday" ClickMode="Release" IsEnabled="False">
+                    Today
+                </Button>
+                
+                <Button Name="BtnForward" Grid.Column="5" Width="auto" Margin="3, 0, 0, 0" 
+                        Click="BtnGoForward" ClickMode="Release" IsEnabled="True">
+                    →
+                </Button>
+            </Grid>
 
             <!--Entries Window-->
             <DataGrid 
                 Name="DgTimeRecords" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedItem}"
-                AutoGenerateColumns="False" Grid.Row="1" Grid.ColumnSpan="4" Margin="0, 12, 0, 0"
+                AutoGenerateColumns="False" Grid.Row="1" Margin="12, 12, 12, 12"
                 HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Disabled"
                 CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
                 CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False" 
@@ -277,19 +299,20 @@
                     Insert Record
                 </Button>
 
-                <Button Grid.Column="0" Grid.Row="6" TabIndex="5"
+                <Button Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="3" TabIndex="5"
                         Height="30" HorizontalAlignment="Stretch"
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnExport" ClickMode="Release">
                     Export
                 </Button>
-
+                <!--
                 <Button Grid.Column="2" Grid.Row="6" TabIndex="6"
                         Height="30" HorizontalAlignment="Stretch"
                         BorderBrush="Black" BorderThickness="1"
                         Click="BtnExportAll" ClickMode="Release">
                     Export All
                 </Button>
+                -->
             </Grid>
         </Grid>
     </Grid>
