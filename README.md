@@ -13,8 +13,8 @@ Time Entry
 7:00 AM, 700, 730, 705, 7, 7:00 PM, 700 PM, 7.00, 7;00, 1900
 
 Saving & Loading
-- All entries are written to file as a csv as they are entered/modified
-- Entries will be loaded from file, if there is a file with a matching date specified.
+- All entries are written to file as an sqlite database as they are entered/modified
+- Entries will be loaded from the db file in the same directory, or a new one will be created if one cannot be found. 
 
 Statistics
 - Display total time for the day, and the amount of gaps in hours/minutes if any records without a case number are present.
